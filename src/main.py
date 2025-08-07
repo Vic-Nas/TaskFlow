@@ -48,6 +48,7 @@ def main():
 
     def onClick(buttonText, ref = None):
         global selectedGroup
+        global overlay
         match buttonText:
             case "☕ Buy me a coffee":
                 webbrowser.open("https://coff.ee/vicnas")
@@ -83,15 +84,18 @@ def main():
                 reload()
                 
             case "DoubleClick Group":
-                os.remove(filePaths[selectedGroup])
-                reload()
+                sure = prompt(f"Sure you want to delete {selectedGroup.title} ?(Y or N)")
+                if sure and sure[0].lower() == "y":
+                    os.remove(filePaths[selectedGroup])
+                    reload()
+                else:
+                    alert("Canceled")
                 
             case "Detect Coords":
                 if overlay:
                     overlay.close_app()
                 overlay = SimpleCircleOverlay()
                 overlay.run()
-                
                     
             case "❌":
                 task = widgets[ref]["task"]

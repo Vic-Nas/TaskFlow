@@ -72,8 +72,18 @@ def main():
                     reload()
                     
             case "Run Group":
-                for task in selectedGroup.tasks:
-                    widgets[task]["run"].invoke()
+                times = runGroupTimesEntry.get()
+                try:
+                    times = int(times)
+                    for _ in range(times):
+                        for task in selectedGroup.tasks:
+                            widgets[task]["run"].invoke()
+                except:
+                    runGroupTimesEntry.delete(0, "end")
+                    runGroupTimesEntry.insert(0, "1")
+                    onClick("Run Group")
+                
+                
                     
             case "New Group":
                 title = prompt("Group name: ")
@@ -102,13 +112,13 @@ def main():
                 selectedGroup.tasks.remove(task)
                 selectedGroup.saveAt(filePaths[selectedGroup])
                 onClick("Select Group")
-                    
-            case "Add Task":
+                
+            case "➕":
+                task = widgets[ref]["task"]
                 newTask = Task("WAIT  1  1  No description")
-                selectedGroup.tasks.append(newTask)
+                selectedGroup.tasks.insert(selectedGroup.tasks.index(task) + 1, newTask)
                 selectedGroup.saveAt(filePaths[selectedGroup])
                 onClick("Select Group")
-                
                     
             case "Run":
                 try:
@@ -265,9 +275,11 @@ def main():
     chosenGroupFrame.grid_propagate(False)
     
     def displaySelected():
+        global runGroupTimesEntry
+        toolBarFrameBg = "cyan"
         toolBarFrame = tkinter.Frame(
             chosenGroupFrame,
-            bg = "cyan",
+            bg = toolBarFrameBg,
             width = 900, height = 50
             )
 
@@ -287,20 +299,7 @@ def main():
                         padx = 10, pady = 10, 
                         sticky = "w")
         
-        # Add Task Button
-        
-        addTaskBtn = MyButton(
-            toolBarFrame,
-            text = "Add Task",
-            bg = "blue",
-            font = (fontStyle, 16, "bold"),
-            width = 8,
-            borderwidth = 3
-        )
-        
-        addTaskBtn.grid(row = 0, column = 1, padx = 5, pady = 3)
-        
-        # Bouton Share
+        # Share
         shareButton = MyButton(
             toolBarFrame,
             text = "Share",
@@ -311,9 +310,9 @@ def main():
             relief = "raised",
             borderwidth = 3
             )
-        shareButton.grid(row = 0, column = 2, padx = 5, pady = 3)
+        shareButton.grid(row = 0, column = 1, padx = 5, pady = 3)
         
-        # Bouton Run
+        # Run
         runGroupButton = MyButton(
             toolBarFrame,
             text = "Run Group",
@@ -324,7 +323,27 @@ def main():
             relief = "raised",
             borderwidth = 3
             )
-        runGroupButton.grid(row = 0, column = 3, padx = 5, pady = 3)
+        runGroupButton.grid(row = 0, column = 2, padx = 3, pady = 3)
+        
+        # Times Entry
+        runGroupTimesEntry = tkinter.Entry(
+            toolBarFrame,
+            width = 2,
+            font = (fontStyle, 22, "bold"),
+            bg = "white",
+            fg = "blue",
+        )
+        runGroupTimesEntry.insert(0, "1")
+        runGroupTimesEntry.grid(row = 0, column = 3, padx = 3, pady = 3)
+        
+        timesLabel = tkinter.Label(
+            toolBarFrame,
+            width = 5,
+            font = (fontStyle, 20, "bold"),
+            bg = toolBarFrameBg,
+            text = "time(s)"
+        )
+        timesLabel.grid(row = 0, column = 4, padx = 2, pady = 3)
         
 
         # Main frame configuration
@@ -363,7 +382,7 @@ def main():
                 font=(fontStyle, 16),
                 relief="solid",
                 bd = 1,
-                width = 27
+                width = 26
             )
             descEntry.insert(0, task.desc)
             descEntry.grid(row=row, column=0, sticky="ew", padx=2, pady=2)
@@ -391,7 +410,8 @@ def main():
                 font = (fontStyle, 16),
                 relief = "solid",
                 bd = 1,
-                justify = "center"
+                justify = "center",
+                width = 18
             )
             
             argsEntry.insert(0, args.replace("[SPACE]", " "))
@@ -446,10 +466,20 @@ def main():
                 tasksFrame, 
                 text = "❌",
                 bg = "red",
-                borderwidth = 6,
+                borderwidth = 5,
                 cursor = "hand2",
             )
             delButton.grid(row = row, column = 6, sticky = "ew", 
+                           padx = 2, pady = 2)
+            
+            addDownButton = MyButton(
+                tasksFrame, 
+                text = "➕",
+                bg = "gray",
+                borderwidth = 5,
+                cursor = "hand2",
+            )
+            addDownButton.grid(row = row, column = 7, sticky = "ew", 
                            padx = 2, pady = 2)
             
             
@@ -462,6 +492,9 @@ def main():
                 "task": task
             }
             backup[delButton] = {
+                "task": task
+            }
+            backup[addDownButton] = {
                 "task": task
             }
             

@@ -13,8 +13,8 @@ from pathlib import Path
 
 # Configuration
 PROJECT_NAME = "TaskFlow"
-MAIN_SCRIPT = "run.py"
-BUILD_DIR = "compiled"
+MAIN_SCRIPT = "TaskFlow.py"
+BUILD_DIR = "build"
 DIST_DIR = os.path.join(BUILD_DIR, "dist")
 WORK_DIR = os.path.join(BUILD_DIR, "build")
 

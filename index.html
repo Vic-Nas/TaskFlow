@@ -57,9 +57,28 @@
         .hero-description {
             font-size: 1.1rem;
             max-width: 600px;
-            margin: 0 auto;
+            margin: 0 auto 30px;
             opacity: 0.85;
             line-height: 1.8;
+        }
+
+        .github-badge {
+            display: inline-block;
+            background: rgba(0,0,0,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .github-badge:hover {
+            background: rgba(0,0,0,0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
         .main-content {
@@ -131,12 +150,13 @@
             opacity: 0.9;
         }
 
-        .download-grid {
+        .download-options {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: 1fr 1fr;
             gap: 30px;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
+            align-items: stretch;
         }
 
         .download-card {
@@ -146,11 +166,22 @@
             border-radius: 15px;
             padding: 30px;
             transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .download-card:hover {
             background: rgba(255,255,255,0.2);
             transform: scale(1.05);
+        }
+
+        .windows-card {
+            border: 2px solid rgba(0,255,0,0.3);
+        }
+
+        .source-card {
+            border: 2px solid rgba(255,255,255,0.3);
         }
 
         .os-icon {
@@ -159,10 +190,24 @@
             display: block;
         }
 
-        .os-name {
-            font-size: 1.5rem;
-            font-weight: 600;
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
             margin-bottom: 10px;
+        }
+
+        .card-subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .card-description {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            flex-grow: 1;
         }
 
         .download-btn {
@@ -177,7 +222,6 @@
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
-            margin-top: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
@@ -185,6 +229,35 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
             background: linear-gradient(45deg, #00a8ff, #00d4aa);
+        }
+
+        .github-btn {
+            background: linear-gradient(45deg, #24292e, #444d56);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .github-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #444d56, #24292e);
+        }
+
+        .platforms-info {
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            font-size: 0.95rem;
         }
 
         .how-it-works {
@@ -272,7 +345,7 @@
                 margin: 20px;
             }
             
-            .download-grid {
+            .download-options {
                 grid-template-columns: 1fr;
             }
         }
@@ -288,6 +361,9 @@
                 boost productivity, and take control of your digital workflow with our intuitive 
                 automation framework.
             </p>
+            <a href="https://github.com/Vic-Nas/TaskFlow" class="github-badge" target="_blank">
+                ⭐ View on GitHub
+            </a>
         </div>
     </header>
 
@@ -376,36 +452,50 @@ KEY  ctrl c  1  Copy selection
         </div>
 
         <section class="download-section">
-            <h2 class="download-title">Download TaskFlow</h2>
-            <p class="download-subtitle">Choose your platform and start automating today</p>
+            <h2 class="download-title">Get TaskFlow</h2>
+            <p class="download-subtitle">Choose your preferred installation method</p>
             
-            <div class="download-grid">
-                <div class="download-card">
-                    <span class="os-icon">🪟</span>
-                    <h3 class="os-name">Windows</h3>
-                    <p>Windows 10/11 Compatible</p>
+            <div class="download-options">
+                <div class="download-card windows-card">
+                    <div>
+                        <span class="os-icon">🪟</span>
+                        <h3 class="card-title">Windows Executable</h3>
+                        <p class="card-subtitle">Ready to Run</p>
+                        <p class="card-description">
+                            Pre-compiled executable for Windows 10/11. 
+                            Download and run immediately - no Python installation required.
+                        </p>
+                    </div>
                     <a href="compiled/win/TaskFlow.zip" class="download-btn" download>
                         Download .exe
                     </a>
                 </div>
                 
-                <div class="download-card">
-                    <span class="os-icon">🍎</span>
-                    <h3 class="os-name">macOS</h3>
-                    <p>macOS 10.14+ Compatible</p>
-                    <a href="compiled/mac/TaskFlow.zip" class="download-btn" download>
-                        Download .app
+                <div class="download-card source-card">
+                    <div>
+                        <span class="os-icon">🐍</span>
+                        <h3 class="card-title">Python Source Code</h3>
+                        <p class="card-subtitle">All Platforms</p>
+                        <p class="card-description">
+                            Run from source code on Windows, macOS, or Linux. 
+                            Requires Python 3.7+ and pip installation of dependencies.
+                        </p>
+                    </div>
+                    <a href="https://github.com/Vic-Nas/TaskFlow" class="github-btn" target="_blank">
+                        View on GitHub
                     </a>
                 </div>
-                
-                <div class="download-card">
-                    <span class="os-icon">🐧</span>
-                    <h3 class="os-name">Linux</h3>
-                    <p>Ubuntu/Debian Compatible</p>
-                    <a href="compiled/linux/TaskFlow.zip" class="download-btn" download>
-                        Download .AppImage
-                    </a>
+            </div>
+            
+            <div class="platforms-info">
+                <p><strong>📱 macOS & Linux Users:</strong></p>
+                <p>Clone the repository and run the Python source code:</p>
+                <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; margin: 15px 0; font-family: monospace; text-align: left;">
+                    git clone https://github.com/Vic-Nas/TaskFlow.git<br>
+                    cd TaskFlow<br>
+                    python taskflow.py
                 </div>
+                <p style="opacity: 0.8;">Full installation instructions and dependencies are available in the GitHub repository.</p>
             </div>
             
             <p style="margin-top: 30px; opacity: 0.8;">
@@ -435,13 +525,13 @@ KEY  ctrl c  1  Copy selection
         });
 
         // Add download tracking (optional)
-        document.querySelectorAll('.download-btn').forEach(btn => {
+        document.querySelectorAll('.download-btn, .github-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
-                const os = this.closest('.download-card').querySelector('.os-name').textContent;
-                console.log(`Download initiated for ${os}`);
+                const type = this.classList.contains('github-btn') ? 'GitHub' : 'Windows Executable';
+                console.log(`Download/Link clicked: ${type}`);
                 
                 // You could add analytics tracking here
-                // gtag('event', 'download', { 'os': os });
+                // gtag('event', 'download', { 'type': type });
             });
         });
 

@@ -175,6 +175,10 @@ def main():
                         print(f"Error saving file: {e}")
                 else:
                     print("Save cancelled")
+                    
+            case "TaskFlow":
+                webbrowser.open("https://vic-nas.github.io/TaskFlow/")
+                print("Visiting website")
                 
             case _:  # default case
                 print(color(buttonText, "red"), "clicked.")

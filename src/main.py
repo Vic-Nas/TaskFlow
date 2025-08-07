@@ -9,7 +9,7 @@ from shutil import copy, copy2
 from imports.automate.detectCoords import SimpleCircleOverlay
 
 from pymsgbox import alert, prompt
-import tkinter, sys
+import tkinter, sys, pyautogui
 
 import os
 
@@ -42,6 +42,8 @@ def main():
     root.resizable(False, False)
     root.iconbitmap(Path("data")/"logo.ico")
     root.title("TaskFlow")
+
+
     centerWin(root)
     fontStyle = "Times New Roman"
 
@@ -72,6 +74,7 @@ def main():
                     reload()
                     
             case "Run Group":
+                alert("Send mouse to a corner to stop everything.")
                 times = runGroupTimesEntry.get()
                 try:
                     times = int(times)
@@ -124,6 +127,11 @@ def main():
                 try:
                     widgets[widgets[ref]["task"]]["save"].invoke()
                     widgets[ref]["task"].run()
+                    
+                except pyautogui.FailSafeException:
+                    print("Failsafe activated - TaskFlow will exit")
+                    alert("Failsafe triggered! TaskFlow is shutting down.")
+                    os._exit(0)
                     
                 except Exception as e:
                     print(e)

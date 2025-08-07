@@ -91,6 +91,7 @@ def main():
             case "❌":
                 task = widgets[ref]["task"]
                 selectedGroup.tasks.remove(task)
+                selectedGroup.saveAt(filePaths[selectedGroup])
                 onClick("Select Group")
                     
             case "Add Task":

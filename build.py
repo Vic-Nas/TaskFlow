@@ -15,6 +15,7 @@ from pathlib import Path
 PROJECT_NAME = "TaskFlow"
 MAIN_SCRIPT = "TaskFlow.py"
 BUILD_DIR = "build"
+ICON_PATH = Path("data")/"VN.ico"
 DIST_DIR = os.path.join(BUILD_DIR, "dist")
 WORK_DIR = os.path.join(BUILD_DIR, "build")
 
@@ -73,6 +74,12 @@ def check_dependencies():
         sys.exit(1)
     else:
         print(f"   ✓ Main script '{MAIN_SCRIPT}' found")
+    
+    # Check if icon file exists
+    if ICON_PATH.exists():
+        print(f"   ✓ Icon file '{ICON_PATH.resolve()}' found")
+    else:
+        print(f"   ⚠️  Warning: Icon file '{ICON_PATH.resolve()}' not found, executable will use default icon")
 
 def get_hidden_imports():
     """Get list of hidden imports that PyInstaller might miss"""
@@ -125,6 +132,15 @@ def build_pyinstaller_command():
         f"--specpath={BUILD_DIR}",
         f"--name={PROJECT_NAME}",
     ]
+    
+    # Add icon if it exists (use absolute path)
+    if ICON_PATH.exists():
+        # Convert to absolute path to avoid PyInstaller path issues
+        icon_absolute_path = os.path.abspath(str(ICON_PATH))
+        command.extend(["--icon", icon_absolute_path])
+        print(f"   ✓ Using icon: {icon_absolute_path}")
+    else:
+        print(f"   ⚠️  Icon not found at {ICON_PATH.resolve()}, using default icon")
     
     # Add hidden imports
     hidden_imports = get_hidden_imports()
@@ -271,6 +287,11 @@ def print_summary():
     print(f"   Location: {os.path.abspath(exe_dir)}")
     print(f"   Executable: {PROJECT_NAME}.exe")
     
+    if ICON_PATH.exists():
+        print(f"   Icon: {ICON_PATH} ✓")
+    else:
+        print(f"   Icon: Default (original icon not found)")
+    
     print(f"\n🚀 To run your application:")
     print(f"   1. Navigate to: {os.path.abspath(exe_dir)}")
     print(f"   2. Double-click: {PROJECT_NAME}.exe")
@@ -290,6 +311,7 @@ def print_summary():
     print(f"   • Executable runs from its own directory like your original setup")
     print(f"   • No Python installation required on target machine")
     print(f"   • All dependencies included")
+    print(f"   • Custom icon applied (if found)")
     
     print(f"\n🧹 After testing:")
     print(f"   You can safely delete the original folders: {', '.join(DATA_FOLDERS)}")

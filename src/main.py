@@ -13,13 +13,15 @@ import tkinter, sys
 
 import os
 
+overlay = None
+
 def reload():
     print(color("Reloading window", "cyan"))
     root.destroy()
     main()
 
 def main():
-    global root
+    global root, overlay
     filePaths = {}
     widgets = {}
     tasksDir = "tasks"
@@ -85,7 +87,10 @@ def main():
                 reload()
                 
             case "Detect Coords":
-                SimpleCircleOverlay().run()
+                if overlay:
+                    overlay.close_app()
+                overlay = SimpleCircleOverlay()
+                overlay.run()
                 
                     
             case "❌":

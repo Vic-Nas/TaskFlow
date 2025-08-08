@@ -8,17 +8,12 @@ from tkinter import filedialog, messagebox
 from shutil import copy, copy2
 from imports.automate.detectCoords import SimpleCircleOverlay
 
-from pymsgbox import prompt
-import tkinter, sys, pyautogui, subprocess, time, os, socket
+from pymsgbox import prompt, alert
+import tkinter, sys, pyautogui, subprocess, os, socket
 from imports.mail import sendFeedBackMail
-from pymsgbox import alert as alert2
-
-alert = lambda text: alert2(title = "Info", text = text)
 
 overlay = None
 feedBackWindow = None
-
-import urllib.request
 
 def single_instance(port=65432):
     """Prevent multiple instances by binding a local TCP port."""

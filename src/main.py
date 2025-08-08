@@ -584,17 +584,17 @@ def main():
             commandMenu = tkinter.OptionMenu(
                 tasksFrame,
                 commandVar,
-                *matchAction.keys(),  # Your global commands list
+                *matchAction.keys()
             )
             commandMenu.config(
-                font = (fontStyle, 16,"bold"),
-                relief = "solid",
-                bd = 1,
-                fg = "violet",
-                width = 7,
-                command = lambda chosen: onClick(chosen, commandMenu)
+                font=(fontStyle, 16, "bold"),
+                relief="solid",
+                bd=1,
+                fg="violet", 
+                width=7
             )
-            commandMenu.grid(row=row, column=1, sticky="ew", padx=2, pady=2)
+
+            commandVar.trace('w', lambda *args: onClick(commandVar.get(), commandMenu))
             
             # Column 3: Entry for arguments
             argsEntry = tkinter.Entry(

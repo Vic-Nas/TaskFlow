@@ -18,7 +18,7 @@ import urllib.request
 def updateWindows():
     import tkinter as tk
     import tkinter.ttk as ttk
-    import requests
+    import urllib.request
     import json
     
     try:
@@ -27,21 +27,17 @@ def updateWindows():
         
         # Get repository version
         repoUrl = "https://raw.githubusercontent.com/Vic-Nas/TaskFlow/main/data/settings.json"
-        response = requests.get(repoUrl, timeout=10)
-        response.raise_for_status()
         
-        repoSettings = response.json()
+        with urllib.request.urlopen(repoUrl, timeout=10) as response:
+            repoSettings = json.loads(response.read().decode('utf-8'))
+        
         repoVersion = repoSettings.get("value")
         
         # Check if update is needed
         if localVersion == repoVersion:
             return
         
-    except requests.RequestException as e:
-        return
-    except json.JSONDecodeError as e:
-        return
-    except Exception as e:
+    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, Exception):
         return
     
     tempDir = os.path.abspath("tempUpdate")

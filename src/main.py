@@ -594,7 +594,7 @@ def main():
                 width=7
             )
 
-            commandVar.trace('w', lambda *args: onClick(commandVar.get(), commandMenu))
+            commandVar.trace('w', lambda *args: onClick(commandVar.get(), commandVar))
             commandMenu.grid(row=row, column=1, sticky="ew", padx=2, pady=2)
             
             # Column 3: Entry for arguments

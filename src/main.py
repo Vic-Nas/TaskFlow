@@ -9,11 +9,71 @@ from shutil import copy, copy2
 from imports.automate.detectCoords import SimpleCircleOverlay
 
 from pymsgbox import alert, prompt
-import tkinter, sys, pyautogui
-
-import os
+import tkinter, sys, pyautogui, platform,  requests, zipfile, subprocess, time, os
 
 overlay = None
+
+def updateWin(root):
+    import os
+    import sys
+    import subprocess
+    import tkinter.ttk as ttk
+    import requests
+
+    url = "https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow/TaskFlow.exe"
+    temp_dir = os.path.abspath("temp_update")
+    os.makedirs(temp_dir, exist_ok=True)
+    new_exe_path = os.path.join(temp_dir, "TaskFlow.exe")
+
+    # Download exe
+    r = requests.get(url, stream=True)
+    if r.status_code != 200:
+        print(f"Failed to download exe, status code {r.status_code}")
+        return
+    with open(new_exe_path, "wb") as f:
+        for chunk in r.iter_content(8192):
+            f.write(chunk)
+
+    current_exe_path = os.path.abspath(sys.executable)
+    exe_name = os.path.basename(current_exe_path)
+
+    # Progress UI inside existing root
+    label = ttk.Label(root, text="Preparing update...")
+    label.pack(pady=20)
+
+    progress = ttk.Progressbar(root, mode="indeterminate", length=280)
+    progress.pack(pady=10)
+    progress.start()
+
+    def start_update():
+        bat_script = f"""@echo off
+echo Waiting for the application to close...
+:loop
+tasklist /FI "IMAGENAME eq {exe_name}" 2>NUL | find /I /N "{exe_name}" >NUL
+if "%ERRORLEVEL%"=="0" (
+    timeout /t 1 /nobreak >NUL
+    goto loop
+)
+echo Copying from "{new_exe_path}" to "{current_exe_path}"
+copy /Y "{new_exe_path}" "{current_exe_path}"
+echo Cleaning up...
+rmdir /S /Q "{temp_dir}"
+del "%~f0"
+"""
+
+        bat_path = os.path.join(os.path.dirname(current_exe_path), "update.bat")
+        with open(bat_path, "w") as bat_file:
+            bat_file.write(bat_script)
+
+        subprocess.Popen([bat_path], shell=True)
+        root.withdraw()
+        sys.exit()
+
+    root.after(1000, start_update)
+
+
+
+
 
 def reload():
     print(color("Reloading window", "cyan"))
@@ -205,6 +265,14 @@ def main():
                 else:
                     # If no file selected, reset commandMenu to "WAIT"
                     ref.set("WAIT")
+                    
+            case "Update":
+                onClick("Update" + platform.system())
+                
+            case "UpdateWindows":
+                updateWin()
+                # Quitter l'appli pour que la maj se fasse correctement
+                sys.exit()
                 
             case default:  # default case
                 print(color(buttonText, "red"), "clicked.")
@@ -220,7 +288,7 @@ def main():
                                             ref = self))
             
             
-    # High Frame: 5 buttons
+    # High Frame
     highFrameBg = "violet"
     highFrame = tkinter.Frame(root, bg = highFrameBg, width = 1200, 
                             height = 60
@@ -238,7 +306,7 @@ def main():
     userLabel = tkinter.Label(highFrame, text = getSetting("email"), 
                             font = (fontStyle, 20, "bold"),
                             bg = highFrameBg, fg = "green",
-                            width = 25)
+                            width = 20)
 
     userLabel.grid(row = 0, column = 1, pady = 5, padx = 20)
 
@@ -266,6 +334,15 @@ def main():
                                     bg = "yellow"
                                     )
     buyCoffeeButton.grid(row = 0, column = 5, padx = (10, 0))
+    
+    updateButton = MyButton(
+        highFrame,
+        text = "Update",
+        font = (fontStyle, 14, "bold"),
+        borderwidth = 3, fg = "white", 
+        bg = "green",  
+        )
+    updateButton.grid(row = 0, column = 6, padx = 10)
 
     # TasksFrame
     groupTasksFrame = tkinter.Frame(root)
@@ -559,5 +636,3 @@ def main():
 
 
     root.mainloop()
-    
-main()

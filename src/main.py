@@ -443,7 +443,7 @@ def main():
 
     taskFlowButton = MyButton(
         highFrame, 
-        text = "TaskFlow v" + getSetting("version"), 
+        text = "TaskFlow v" + str(getSetting("version")), 
         borderwidth = 0, font = (fontStyle, 20, "bold"), 
         bg = highFrameBg, fg = "white",
     )

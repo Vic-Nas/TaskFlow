@@ -179,7 +179,7 @@ def main():
     fontStyle = "Times New Roman"
 
 
-    def onClick(buttonText, ref = None):
+    def onClick(buttonText, ref1 = None, ref2 = None):
         global selectedGroup
         global overlay
         match buttonText:
@@ -244,13 +244,13 @@ def main():
                 overlay.run()
                     
             case "❌":
-                task = widgets[ref]["task"]
+                task = widgets[ref1]["task"]
                 selectedGroup.tasks.remove(task)
                 selectedGroup.saveAt(filePaths[selectedGroup])
                 onClick("Select Group")
                 
             case "➕":
-                task = widgets[ref]["task"]
+                task = widgets[ref1]["task"]
                 newTask = Task("WAIT  1  1  No description")
                 selectedGroup.tasks.insert(selectedGroup.tasks.index(task) + 1, newTask)
                 selectedGroup.saveAt(filePaths[selectedGroup])
@@ -258,8 +258,8 @@ def main():
                     
             case "Run":
                 try:
-                    widgets[widgets[ref]["task"]]["save"].invoke()
-                    widgets[ref]["task"].run()
+                    widgets[widgets[ref1]["task"]]["save"].invoke()
+                    widgets[ref1]["task"].run()
                     
                 except pyautogui.FailSafeException:
                     print("Failsafe activated - TaskFlow will exit")
@@ -272,14 +272,14 @@ def main():
                 
             case "Save":
                 try:
-                    params = " ".join(widgets[ref]["args"].get().replace(" ", "[SPACE]").split(","))
-                    command = widgets[ref]["command"].get()
-                    desc = widgets[ref]["desc"].get()
-                    times = widgets[ref]["times"].get()
+                    params = " ".join(widgets[ref1]["args"].get().replace(" ", "[SPACE]").split(","))
+                    command = widgets[ref1]["command"].get()
+                    desc = widgets[ref1]["desc"].get()
+                    times = widgets[ref1]["times"].get()
                     newTask = Task("  ".join(
                         [command, params, times, desc]
                     ))
-                    widgets[ref]["task"].update(newTask)
+                    widgets[ref1]["task"].update(newTask)
                     selectedGroup.saveAt(filePaths[selectedGroup])
             
                 except Exception as e:
@@ -291,7 +291,7 @@ def main():
                 
             case "EXEC":
                 # Clear the entry
-                widgets[ref]["entry"].delete(0, tkinter.END)
+                widgets[ref1]["entry"].delete(0, tkinter.END)
                 
                 # Open file dialog to select a file
                 file_selected = filedialog.askopenfilename(
@@ -306,11 +306,10 @@ def main():
                 if file_selected:
                     # Normalize the path and insert it into the entry
                     normalized_path = os.path.normpath(file_selected)
-                    widgets[ref]["entry"].insert(0, normalized_path)
+                    widgets[ref1]["entry"].insert(0, normalized_path)
                 else:
                     # If no file selected, reset commandMenu to "WAIT"
-                    var = ref.cget('textvariable')
-                    var.set("WAIT")
+                    ref2.set("WAIT")
             
             case "Share":
                 folder_path = filedialog.askdirectory(
@@ -340,7 +339,7 @@ def main():
                 
             case "OPEN":
                 # Clear the entry
-                widgets[ref]["entry"].delete(0, tkinter.END)
+                widgets[ref1]["entry"].delete(0, tkinter.END)
                 
                 # Open file dialog to select a file
                 file_selected = filedialog.askopenfilename(
@@ -358,11 +357,10 @@ def main():
                 if file_selected:
                     # Normalize the path and insert it into the entry
                     normalized_path = os.path.normpath(file_selected)
-                    widgets[ref]["entry"].insert(0, normalized_path)
+                    widgets[ref1]["entry"].insert(0, normalized_path)
                 else:
                     # If no file selected, reset commandMenu to "WAIT"
-                    var = ref.cget('textvariable')
-                    var.set("WAIT")
+                    ref2.set("WAIT")
 
             case default:  # default case
                 print(color(buttonText, "red"), "clicked.")
@@ -373,7 +371,7 @@ def main():
         def __init__(self, master, **kwargs):
             # Si aucune command n'est fournie, utiliser onClick par défaut
             if 'command' not in kwargs:
-                kwargs['command'] = lambda: onClick(self['text'], ref=self)
+                kwargs['command'] = lambda: onClick(self['text'], ref1=self)
             
             super().__init__(master, **kwargs)
             
@@ -596,7 +594,7 @@ def main():
                 width=7
             )
 
-            commandVar.trace('w', lambda *args: onClick(commandVar.get(), commandMenu))
+            commandVar.trace('w', lambda *args: onClick(commandVar.get(), commandMenu, commandVar))
             commandMenu.grid(row=row, column=1, sticky="ew", padx=2, pady=2)
             
             # Column 3: Entry for arguments

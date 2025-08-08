@@ -9,35 +9,32 @@ from shutil import copy, copy2
 from imports.automate.detectCoords import SimpleCircleOverlay
 
 from pymsgbox import alert, prompt
-import tkinter, sys, pyautogui, platform,  requests, zipfile, subprocess, time, os
+import tkinter, sys, pyautogui, platform, zipfile, subprocess, time, os
 
 overlay = None
+
+import urllib.request
 
 def updateWin(root):
     import os
     import sys
     import subprocess
     import tkinter.ttk as ttk
-    import requests
 
     url = "https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow/TaskFlow.exe"
     temp_dir = os.path.abspath("temp_update")
     os.makedirs(temp_dir, exist_ok=True)
     new_exe_path = os.path.join(temp_dir, "TaskFlow.exe")
 
-    # Download exe
-    r = requests.get(url, stream=True)
-    if r.status_code != 200:
-        print(f"Failed to download exe, status code {r.status_code}")
+    try:
+        urllib.request.urlretrieve(url, new_exe_path)
+    except Exception as e:
+        print(f"Download failed: {e}")
         return
-    with open(new_exe_path, "wb") as f:
-        for chunk in r.iter_content(8192):
-            f.write(chunk)
 
     current_exe_path = os.path.abspath(sys.executable)
     exe_name = os.path.basename(current_exe_path)
 
-    # Progress UI inside existing root
     label = ttk.Label(root, text="Preparing update...")
     label.pack(pady=20)
 
@@ -45,7 +42,7 @@ def updateWin(root):
     progress.pack(pady=10)
     progress.start()
 
-    def start_update():
+    def start():
         bat_script = f"""@echo off
 echo Waiting for the application to close...
 :loop
@@ -69,7 +66,8 @@ del "%~f0"
         root.withdraw()
         sys.exit()
 
-    root.after(1000, start_update)
+    root.after(1000, start)
+
 
 
 

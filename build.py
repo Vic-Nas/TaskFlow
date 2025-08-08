@@ -320,6 +320,8 @@ def main():
     """Main build process"""
     print("🔨 TaskFlow Build Script")
     print("="*40)
+    from imports.settings import setSetting, getSetting
+    setSetting("version", getSetting("version") + 1)
     
     try:
         # Step 1: Clean previous builds

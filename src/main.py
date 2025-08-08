@@ -342,7 +342,7 @@ def main():
                 else:
                     print("Save cancelled")
                     
-            case "TaskFlow":
+            case t if t.startswith("TaskFlow"):
                 webbrowser.open("https://vic-nas.github.io/TaskFlow/")
                 print("Visiting website")
                 
@@ -442,21 +442,50 @@ def main():
     highFrame.pack()
     highFrame.grid_propagate(False)
 
+    version = str(getSetting("version"))[:3]  # prend max 3 caractères
+
     taskFlowButton = MyButton(
         highFrame, 
-        text = "TaskFlow v" + str(getSetting("version")), 
-        borderwidth = 0, font = (fontStyle, 20, "bold"), 
-        bg = highFrameBg, fg = "white",
+        text = "TaskFlow v" + version, 
+        borderwidth = 0, font = (fontStyle, 22, "bold"), 
+        bg = highFrameBg, fg = "white", width = 12,
+        anchor = "w", justify = "center"
     )
 
-    taskFlowButton.grid(row = 0, column = 0, pady = 5)
+    taskFlowButton.grid(row = 0, column = 0, pady = 5, padx = 15)
 
-    userLabel = tkinter.Label(highFrame, text = getSetting("email"), 
-                            font = (fontStyle, 20, "bold"),
-                            bg = highFrameBg, fg = "green",
-                            width = 25)
 
-    userLabel.grid(row = 0, column = 1, pady = 5, padx = 20)
+    def normalizeEmail(email, maxLen):
+        if len(email) == maxLen:
+            return email
+        if len(email) < maxLen:
+            totalSpaces = maxLen - len(email)
+            leftSpaces = totalSpaces // 2
+            rightSpaces = totalSpaces - leftSpaces
+            return " " * leftSpaces + email + " " * rightSpaces
+
+        keepLen = maxLen - 3
+        leftLen = keepLen // 2
+        rightLen = keepLen - leftLen
+        return email[:leftLen] + "..." + email[-rightLen:]
+
+
+
+
+    email = getSetting("email")
+    normalizedEmail = normalizeEmail(email, 22)
+
+    userLabel = tkinter.Label(
+        highFrame, 
+        text=normalizedEmail,
+        font = ('Courier', 20, 'bold'),
+        bg=highFrameBg, fg="green",
+        anchor="w"
+    )
+
+    userLabel.grid(row=0, column=1, pady=5, padx=10)
+
+
 
     feedBackButton = MyButton(highFrame, text = "FeedBack",
                                 bg = "blue", fg = "white",

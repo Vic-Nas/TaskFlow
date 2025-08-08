@@ -11,9 +11,9 @@ from imports.automate.detectCoords import SimpleCircleOverlay
 from pymsgbox import prompt
 import tkinter, sys, pyautogui, subprocess, time, os, socket
 from imports.mail import sendFeedBackMail
-from pymsgbox import alert
+from pymsgbox import alert as alert2
 
-alert = lambda text: alert(title = "Info", text = text)
+alert = lambda text: alert2(title = "Info", text = text)
 
 overlay = None
 feedBackWindow = None

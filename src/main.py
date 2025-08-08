@@ -46,7 +46,7 @@ def updateWindows():
         with urllib.request.urlopen(repoUrl, timeout=10) as response:
             repoSettings = json.loads(response.read().decode('utf-8'))
         
-        repoVersion = repoSettings.get("value")
+        repoVersion = repoSettings.get("version")
         
         # Ensure repoVersion is an integer
         if repoVersion is None:
@@ -60,11 +60,6 @@ def updateWindows():
         # Check if update is needed
         if localVersion == repoVersion:
             return
-            
-        # Debug logging - remove after testing
-        with open("debug_update.log", "w") as f:
-            f.write(f"Local version: {localVersion} (type: {type(localVersion)})\n")
-            f.write(f"Repo version: {repoVersion} (type: {type(repoVersion)})\n")
         
     except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, Exception):
         return

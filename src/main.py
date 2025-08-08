@@ -9,7 +9,7 @@ from shutil import copy, copy2
 from imports.automate.detectCoords import SimpleCircleOverlay
 
 from pymsgbox import alert, prompt
-import tkinter, sys, pyautogui, platform, zipfile, subprocess, time, os, socket
+import tkinter, sys, pyautogui, zipfile, subprocess, time, os, socket
 
 
 
@@ -59,10 +59,13 @@ def updateWindows():
         
         # Check if update is needed
         if localVersion == repoVersion:
+            alert("Up to date.")
             return
         
     except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, Exception):
         return
+    
+    alert("Comfirm update")
     
     tempDir = os.path.abspath("tempUpdate")
     backupDir = os.path.abspath("backup")
@@ -149,11 +152,6 @@ def reload():
     main()
 
 def main():
-    try:
-        exec("update" + platform.system() + "()")
-        alert("Up to date")
-    except Exception as e:
-        alert(f"Couldn't update:\n{e}")
     global root, overlay
     filePaths = {}
     widgets = {}
@@ -396,7 +394,7 @@ def main():
     userLabel = tkinter.Label(highFrame, text = getSetting("email"), 
                             font = (fontStyle, 20, "bold"),
                             bg = highFrameBg, fg = "green",
-                            width = 35)
+                            width = 33)
 
     userLabel.grid(row = 0, column = 1, pady = 5, padx = 20)
 
@@ -588,14 +586,14 @@ def main():
                 tasksFrame,
                 commandVar,
                 *matchAction.keys(),  # Your global commands list
-                command = lambda chosen: onClick(chosen, commandMenu)
             )
             commandMenu.config(
                 font = (fontStyle, 16,"bold"),
                 relief = "solid",
                 bd = 1,
                 fg = "violet",
-                width = 7
+                width = 7,
+                command = lambda chosen: onClick(chosen, commandMenu)
             )
             commandMenu.grid(row=row, column=1, sticky="ew", padx=2, pady=2)
             

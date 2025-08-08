@@ -23,7 +23,7 @@ matchAction.update({
     "KEY": pyautogui.hotkey,
     "OPEN": lambda filePath: openFile(filePath.replace("[SPACE]", " ")),
     "TYPE": lambda *args: pyautogui.write(",".join(args).replace("[SPACE]", " ")),
-    "EXEC": lambda filePath: TaskGroup(filePath).run(filePath.replace("[SPACE]", " "))
+    "EXEC": lambda filePath: TaskGroup(filePath.replace("[SPACE]", " ")).run()
     })
 
 class Task:

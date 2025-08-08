@@ -11,8 +11,9 @@ from imports.automate.detectCoords import SimpleCircleOverlay
 from pymsgbox import prompt
 import tkinter, sys, pyautogui, subprocess, time, os, socket
 from imports.mail import sendFeedBackMail
-alert = lambda message: messagebox.showinfo("Info", message)
+from pymsgbox import alert
 
+alert = lambda text: alert(title = "Info", text = text)
 
 overlay = None
 feedBackWindow = None
@@ -374,21 +375,23 @@ def main():
                 if feedBackWindow:
                     feedBackWindow.destroy()
 
-                feedBackWindow = tkinter.Tk()
+                feedBackWindow = tkinter.Toplevel()
                 feedBackWindow.title("Send Feedback")
                 feedBackWindow.geometry("400x350")
                 centerWin(feedBackWindow)
+                feedBackWindow.transient()  # Reste devant la fenêtre principale
+                feedBackWindow.grab_set()   # Bloque l’interaction avec les autres fenêtres tant que celle-ci est ouverte
 
                 attachedFiles = []
 
                 def selectFiles():
                     files = filedialog.askopenfilenames(title="Select files")
                     if files:
-                        # Append new files if not already added
-                        for f in files:
-                            if f not in attachedFiles:
-                                attachedFiles.append(f)
-                        # Update the label with file names
+                        # Ajouter seulement les fichiers non encore présents
+                        newFiles = [f for f in files if f not in attachedFiles]
+                        attachedFiles.extend(newFiles)
+
+                        # Mettre à jour l’affichage des noms
                         fileListVar.set("\n".join([f.split("/")[-1] for f in attachedFiles]))
 
                 def send():
@@ -415,9 +418,6 @@ def main():
 
                 sendBtn = tkinter.Button(feedBackWindow, text="Send", command=send)
                 sendBtn.pack(padx=10, pady=10)
-                
-                feedBackWindow.mainloop()
-
 
 
             case default:  # default case

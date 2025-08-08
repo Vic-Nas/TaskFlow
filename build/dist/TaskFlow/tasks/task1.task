@@ -1,0 +1,16 @@
+#Test task
+#nasci.victorio@gmail.com
+#ACTION  PARAMS  TIMES  Desc
+
+RCLICK  100.0 200.0  1  Right Click at (100, 200.5)
+
+LCLICK  100.0 200.5  1  Left Click at (100, 200.5)
+
+WAIT  5.0  1  Wait 5s
+
+KEY  ctrl a  1  Click Ctrl + a
+
+KEY  a  1  Click a
+
+WAIT  2.0  1  No comment
+

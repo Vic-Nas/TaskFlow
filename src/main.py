@@ -1,5 +1,5 @@
 
-from imports.settings import logged, login, color, getSetting
+from imports.settings import logged, login, color, getSetting, setSetting
 from imports.utils import centerWin
 import webbrowser
 from pathlib import Path
@@ -9,19 +9,32 @@ from shutil import copy, copy2
 from imports.automate.detectCoords import SimpleCircleOverlay
 
 from pymsgbox import alert, prompt
-import tkinter, sys, pyautogui, platform, zipfile, subprocess, time, os
+import tkinter, sys, pyautogui, platform, zipfile, subprocess, time, os, socket
+
+
 
 overlay = None
 
 import urllib.request
+
+def single_instance(port=65432):
+    """Prevent multiple instances by binding a local TCP port."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(("127.0.0.1", port))
+    except socket.error:
+        print("Application is already running.")
+        sys.exit(0)
+    return s  # Keep socket open as long as app runs
+
+# ---- Usage ----
+lock_socket = single_instance()
 
 def updateWindows():
     import tkinter as tk
     import tkinter.ttk as ttk
     import urllib.request
     import json
-    import zipfile
-    import shutil
     
     try:
         # Get local version
@@ -61,78 +74,44 @@ def updateWindows():
     os.makedirs(tempDir, exist_ok=True)
     os.makedirs(backupDir, exist_ok=True)
     
+    # Update version BEFORE launching batch to prevent loop
+    setSetting("version", repoVersion)
+    
     # Create batch script with real download logic
     batScript = f"""@echo off
 echo Update started - Local version: {localVersion}, Repository version: {repoVersion} > update.log
 
 echo Creating backup... >> update.log
-if exist "{backupDir}\\*" (
-    del /q "{backupDir}\\*" >> update.log 2>&1
-)
-copy "{currentExePath}" "{backupDir}\\" >> update.log 2>&1
+copy "{currentExePath}" "{backupDir}\\{exeName}.bak" >> update.log 2>&1
 if errorlevel 1 (
     echo Backup failed, aborting update >> update.log
     goto :cleanup
 )
-echo Backup created successfully >> update.log
 
 echo Downloading TaskFlow.exe... >> update.log
-powershell -Command "try {{ Invoke-WebRequest -Uri 'https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow/TaskFlow.exe' -OutFile '{tempDir}\\TaskFlow.exe' -TimeoutSec 30; Write-Host 'Download completed' }} catch {{ Write-Host 'Download failed'; exit 1 }}" >> update.log 2>&1
+powershell -WindowStyle Hidden -Command "try {{ Invoke-WebRequest -Uri 'https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow/TaskFlow.exe' -OutFile '{tempDir}\\TaskFlow.exe' -TimeoutSec 30 }} catch {{ exit 1 }}" >> update.log 2>&1
 if errorlevel 1 (
-    echo Download failed, aborting update >> update.log
+    echo Download failed, restoring version >> update.log
     goto :cleanup
 )
 
-echo Installing update... >> update.log
-timeout /t 2 /nobreak > nul
-taskkill /f /im "{exeName}" > nul 2>&1
+echo Waiting for app to close... >> update.log
+timeout /t 3 /nobreak > nul
 
-if exist "{tempDir}\\TaskFlow.exe" (
-    copy /y "{tempDir}\\TaskFlow.exe" "{appDir}\\{exeName}" >> update.log 2>&1
-    if errorlevel 1 (
-        echo Installation failed >> update.log
-        goto :restore
-    )
-    echo Update installed successfully >> update.log
-    echo Updating local version to {repoVersion}... >> update.log
-) else (
-    echo Downloaded executable not found >> update.log
-    goto :restore
+echo Installing update... >> update.log
+copy /y "{tempDir}\\TaskFlow.exe" "{currentExePath}" >> update.log 2>&1
+if errorlevel 1 (
+    echo Installation failed, restoring backup >> update.log
+    copy /y "{backupDir}\\{exeName}.bak" "{currentExePath}" >> update.log 2>&1
 )
 
-echo Creating version update script... >> update.log
-echo import sys, os > updateVersion.py
-echo sys.path.append(r'{appDir}') >> updateVersion.py
-echo try: >> updateVersion.py
-echo     from yourSettingsModule import setSetting >> updateVersion.py
-echo     setSetting('version', {repoVersion}) >> updateVersion.py
-echo     print('Version updated successfully') >> updateVersion.py
-echo except Exception as e: >> updateVersion.py
-echo     print(f'Version update failed: {{e}}') >> updateVersion.py
-echo os.remove(__file__) >> updateVersion.py
-
-python updateVersion.py >> update.log 2>&1
-
-goto :restart
-
-:restore
-echo Restoring from backup... >> update.log
-copy /y "{backupDir}\\{exeName}" "{appDir}\\" >> update.log 2>&1
-echo Restore completed >> update.log
-goto :restart
-
-:restart
 echo Starting updated application... >> update.log
-start /min "" "{currentExePath}"
-timeout /t 1 /nobreak > nul
-goto :cleanup
+start "" "{currentExePath}"
 
 :cleanup
-echo Cleaning temp directory... >> update.log
-if exist "{tempDir}" (
-    rmdir /s /q "{tempDir}" >> update.log 2>&1
-)
-echo Update process finished >> update.log
+echo Cleaning up... >> update.log
+if exist "{tempDir}" rmdir /s /q "{tempDir}" >> update.log 2>&1
+echo Update finished >> update.log
 del "%~0"
 """
     

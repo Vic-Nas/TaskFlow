@@ -595,6 +595,7 @@ def main():
             )
 
             commandVar.trace('w', lambda *args: onClick(commandVar.get(), commandMenu))
+            commandMenu.grid(row=row, column=1, sticky="ew", padx=2, pady=2)
             
             # Column 3: Entry for arguments
             argsEntry = tkinter.Entry(

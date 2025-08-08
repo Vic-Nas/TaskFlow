@@ -181,9 +181,35 @@ def main():
                 webbrowser.open("https://vic-nas.github.io/TaskFlow/")
                 print("Visiting website")
                 
-            case _:  # default case
+            case "OPEN":
+                # Clear the entry
+                widgets[ref]["entry"].delete(0, tkinter.END)
+                
+                # Open file dialog to select a file
+                file_selected = filedialog.askopenfilename(
+                    title="Select a file to open",
+                    initialdir=os.getcwd(),  # or another default directory
+                    filetypes=[
+                        ("All files", "*.*"),
+                        ("Text files", "*.txt"),
+                        ("Python files", "*.py"),
+                        # Add other file types as needed
+                    ]
+                )
+                
+                # If a file was selected
+                if file_selected:
+                    # Normalize the path and insert it into the entry
+                    normalized_path = os.path.normpath(file_selected)
+                    widgets[ref]["entry"].insert(0, normalized_path)
+                else:
+                    # If no file selected, reset commandMenu to "WAIT"
+                    ref.set("WAIT")
+                
+            case default:  # default case
                 print(color(buttonText, "red"), "clicked.")
-                alert("Unavailable for now.")
+                if default not in matchAction.keys():
+                    alert("Unavailable for now.")
 
     class MyButton(tkinter.Button):
         def __init__(self, master, **kwargs):
@@ -406,7 +432,8 @@ def main():
             commandMenu = tkinter.OptionMenu(
                 tasksFrame,
                 commandVar,
-                *matchAction.keys()  # Your global commands list
+                *matchAction.keys(),  # Your global commands list
+                command = lambda chosen: onClick(chosen, commandMenu)
             )
             commandMenu.config(
                 font = (fontStyle, 16,"bold"),
@@ -509,6 +536,11 @@ def main():
             }
             backup[addDownButton] = {
                 "task": task
+            }
+            
+            
+            backup[commandMenu] = {
+                "entry": argsEntry
             }
             
             backup[saveBtn] = {

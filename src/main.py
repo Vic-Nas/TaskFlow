@@ -20,6 +20,8 @@ def updateWindows():
     import tkinter.ttk as ttk
     import urllib.request
     import json
+    import zipfile
+    import shutil
     
     try:
         # Get local version
@@ -41,33 +43,81 @@ def updateWindows():
         return
     
     tempDir = os.path.abspath("tempUpdate")
+    backupDir = os.path.abspath("backup")
     
     # Get the actual executable path (works for both .py and .exe)
     if getattr(sys, 'frozen', False):
         # Running as compiled exe
         currentExePath = sys.executable
+        appDir = os.path.dirname(currentExePath)
     else:
         # Running as python script
         currentExePath = os.path.abspath(sys.argv[0])
+        appDir = os.path.dirname(currentExePath)
     
     exeName = os.path.basename(currentExePath)
     
-    # Create temp dir
+    # Create temp and backup dirs
     os.makedirs(tempDir, exist_ok=True)
+    os.makedirs(backupDir, exist_ok=True)
     
-    # Create batch script
+    # Create batch script with real download logic
     batScript = f"""@echo off
 echo Update started - Local version: {localVersion}, Repository version: {repoVersion} > update.log
+
+echo Creating backup... >> update.log
+if exist "{backupDir}\\*" (
+    del /q "{backupDir}\\*" >> update.log 2>&1
+)
+copy "{currentExePath}" "{backupDir}\\" >> update.log 2>&1
+if errorlevel 1 (
+    echo Backup failed, aborting update >> update.log
+    goto :cleanup
+)
+echo Backup created successfully >> update.log
+
+echo Downloading TaskFlow.exe... >> update.log
+powershell -Command "try {{ Invoke-WebRequest -Uri 'https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow/TaskFlow.exe' -OutFile '{tempDir}\\TaskFlow.exe' -TimeoutSec 30; Write-Host 'Download completed' }} catch {{ Write-Host 'Download failed'; exit 1 }}" >> update.log 2>&1
+if errorlevel 1 (
+    echo Download failed, aborting update >> update.log
+    goto :cleanup
+)
+
+echo Installing update... >> update.log
+timeout /t 2 /nobreak > nul
+taskkill /f /im "{exeName}" > nul 2>&1
+
+if exist "{tempDir}\\TaskFlow.exe" (
+    copy /y "{tempDir}\\TaskFlow.exe" "{appDir}\\{exeName}" >> update.log 2>&1
+    if errorlevel 1 (
+        echo Installation failed >> update.log
+        goto :restore
+    )
+    echo Update installed successfully >> update.log
+) else (
+    echo Downloaded executable not found >> update.log
+    goto :restore
+)
+
+goto :restart
+
+:restore
+echo Restoring from backup... >> update.log
+copy /y "{backupDir}\\{exeName}" "{appDir}\\" >> update.log 2>&1
+echo Restore completed >> update.log
+goto :restart
+
+:restart
+echo Starting updated application... >> update.log
+start "" "{currentExePath}"
+goto :cleanup
+
+:cleanup
 echo Cleaning temp directory... >> update.log
 if exist "{tempDir}" (
-    rmdir /s /q "{tempDir}"
-    echo Temp directory removed successfully >> update.log
-) else (
-    echo Temp directory not found >> update.log
+    rmdir /s /q "{tempDir}" >> update.log 2>&1
 )
-echo Restarting application... >> update.log
-start "" "{exeName}"
-echo Update finished successfully >> update.log
+echo Update process finished >> update.log
 del "%~0"
 """
     

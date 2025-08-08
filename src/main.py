@@ -314,6 +314,12 @@ def main():
                     ref2.set("WAIT")
                     ref1.configure(text = "WAIT")
             
+            case "KEY":
+                menu = ref1
+                entry = widgets[menu]["entry"]
+                entry.delete(0, "end")
+                entry.insert(0, "win,d")
+            
             case "Share":
                 folder_path = filedialog.askdirectory(
                 title = "Select folder to save task file",
@@ -754,6 +760,7 @@ def main():
             backup[commandMenu] = {
                 "entry": argsEntry
             }
+            
             
             backup[saveBtn] = {
                 "args": argsEntry,

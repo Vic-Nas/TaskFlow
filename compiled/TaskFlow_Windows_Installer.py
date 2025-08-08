@@ -48,43 +48,43 @@ $Shortcut.Save()
 
 def create_uninstaller(install_path):
     try:
-        uninstaller_code = f'''import shutil
-import sys
-from pathlib import Path
-import ctypes
+        # Create simple batch uninstaller
+        batch_content = f'''@echo off
+echo TaskFlow Uninstaller
+echo ====================
+echo.
+echo This will completely remove TaskFlow from your system.
+pause
+echo.
+echo Removing TaskFlow...
 
-def is_admin():
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
-        return False
+:: Request admin rights
+net session >nul 2>&1
+if not %errorLevel% == 0 (
+    echo Administrator rights required.
+    powershell -Command "Start-Process '%~f0' -Verb RunAs"
+    exit
+)
 
-if not is_admin():
-    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-    sys.exit()
+:: Remove installation directory
+if exist "{install_path}" (
+    rmdir /s /q "{install_path}"
+    echo TaskFlow removed successfully.
+) else (
+    echo TaskFlow installation not found.
+)
 
-install_dir = Path(r"{install_path}")
-desktop = Path.home() / "Desktop" / "TaskFlow.lnk"
+:: Remove desktop shortcut
+if exist "%USERPROFILE%\\Desktop\\TaskFlow.lnk" (
+    del "%USERPROFILE%\\Desktop\\TaskFlow.lnk"
+    echo Desktop shortcut removed.
+)
 
-print("Uninstalling TaskFlow...")
-
-if install_dir.exists():
-    shutil.rmtree(install_dir)
-    print("TaskFlow removed.")
-
-if desktop.exists():
-    desktop.unlink()
-    print("Desktop shortcut removed.")
-
-print("Uninstallation completed.")
-input("Press Enter to exit...")
+echo.
+echo Uninstallation completed.
+pause
 '''
         
-        uninstaller_path = install_path / "uninstall.py"
-        with open(uninstaller_path, 'w') as f:
-            f.write(uninstaller_code)
-        
-        batch_content = f'@echo off\ncd /d "{install_path}"\npython uninstall.py\n'
         batch_path = install_path / "uninstall.bat"
         with open(batch_path, 'w') as f:
             f.write(batch_content)

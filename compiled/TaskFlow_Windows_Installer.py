@@ -112,8 +112,42 @@ def main():
         
         # Download
         print("Downloading TaskFlow.zip...")
-        urllib.request.urlretrieve(zip_url, zip_path)
-        print(f"Downloaded: {zip_path.stat().st_size} bytes")
+        
+        def download_with_progress(url, destination):
+            try:
+                response = urllib.request.urlopen(url)
+                total_size = int(response.headers.get('Content-Length', 0))
+                
+                if total_size > 0:
+                    print(f"File size: {total_size / (1024*1024):.1f} MB")
+                
+                downloaded = 0
+                chunk_size = 8192
+                
+                with open(destination, 'wb') as f:
+                    while True:
+                        chunk = response.read(chunk_size)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        
+                        if total_size > 0:
+                            progress = (downloaded / total_size) * 100
+                            print(f"\rProgress: {progress:.1f}% ({downloaded / (1024*1024):.1f} MB)", end='', flush=True)
+                        else:
+                            print(f"\rDownloaded: {downloaded / (1024*1024):.1f} MB", end='', flush=True)
+                
+                print()  # New line after progress
+                return True
+                
+            except Exception as e:
+                print(f"Download error: {e}")
+                return False
+        
+        if not download_with_progress(zip_url, zip_path):
+            print("Download failed!")
+            return
         
         # Extract
         print("Extracting...")

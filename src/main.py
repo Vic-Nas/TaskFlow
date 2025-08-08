@@ -48,9 +48,23 @@ def updateWindows():
         
         repoVersion = repoSettings.get("value")
         
+        # Ensure repoVersion is an integer
+        if repoVersion is None:
+            return
+        
+        try:
+            repoVersion = int(repoVersion)
+        except (ValueError, TypeError):
+            return
+        
         # Check if update is needed
         if localVersion == repoVersion:
             return
+            
+        # Debug logging - remove after testing
+        with open("debug_update.log", "w") as f:
+            f.write(f"Local version: {localVersion} (type: {type(localVersion)})\n")
+            f.write(f"Repo version: {repoVersion} (type: {type(repoVersion)})\n")
         
     except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, Exception):
         return
@@ -74,10 +88,7 @@ def updateWindows():
     os.makedirs(tempDir, exist_ok=True)
     os.makedirs(backupDir, exist_ok=True)
     
-    # Update version BEFORE launching batch to prevent loop
-    setSetting("version", repoVersion)
-    
-    # Create batch script with real download logic
+    # Create batch script FIRST, then update version after successful download
     batScript = f"""@echo off
 echo Update started - Local version: {localVersion}, Repository version: {repoVersion} > update.log
 
@@ -91,7 +102,7 @@ if errorlevel 1 (
 echo Downloading TaskFlow.exe... >> update.log
 powershell -WindowStyle Hidden -Command "try {{ Invoke-WebRequest -Uri 'https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow/TaskFlow.exe' -OutFile '{tempDir}\\TaskFlow.exe' -TimeoutSec 30 }} catch {{ exit 1 }}" >> update.log 2>&1
 if errorlevel 1 (
-    echo Download failed, restoring version >> update.log
+    echo Download failed >> update.log
     goto :cleanup
 )
 
@@ -103,9 +114,10 @@ copy /y "{tempDir}\\TaskFlow.exe" "{currentExePath}" >> update.log 2>&1
 if errorlevel 1 (
     echo Installation failed, restoring backup >> update.log
     copy /y "{backupDir}\\{exeName}.bak" "{currentExePath}" >> update.log 2>&1
+    goto :cleanup
 )
 
-echo Starting updated application... >> update.log
+echo Update successful, starting application... >> update.log
 start "" "{currentExePath}"
 
 :cleanup
@@ -119,6 +131,15 @@ del "%~0"
     
     with open(batPath, "w") as batFile:
         batFile.write(batScript)
+    
+    # Update version only AFTER successful batch creation
+    # The new version will update its own settings when it starts
+    try:
+        # Only update if we got this far successfully
+        setSetting("version", repoVersion)
+    except:
+        # If setting fails, don't abort the update
+        pass
     
     # Launch batch silently and exit current process
     subprocess.Popen([batPath], cwd=os.path.dirname(currentExePath), creationflags=subprocess.CREATE_NO_WINDOW)

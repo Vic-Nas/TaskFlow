@@ -94,7 +94,19 @@ def install_taskflow():
         # Copy extracted files to installation directory
         print(f"Installing to {install_dir}...")
         
+        # Debug: List what was extracted
+        extracted_files = list(temp_extract.rglob("*"))
+        print(f"DEBUG: Found {len(extracted_files)} items in extracted folder")
+        for item in extracted_files[:10]:  # Show first 10 items
+            print(f"  - {item}")
+        
+        if not extracted_files:
+            print("ERROR: No files were extracted!")
+            input("Press Enter to exit...")
+            return
+        
         # Copy all files from extracted folder
+        copied_count = 0
         for item in temp_extract.rglob("*"):
             if item.is_file():
                 # Calculate relative path
@@ -106,8 +118,9 @@ def install_taskflow():
                 
                 # Copy file
                 shutil.copy2(item, dest_path)
+                copied_count += 1
         
-        print("Files copied successfully.")
+        print(f"Files copied successfully. ({copied_count} files)")
         
         # Find TaskFlow.exe
         taskflow_exe = install_dir / "TaskFlow.exe"

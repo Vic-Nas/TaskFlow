@@ -125,6 +125,6 @@ class TaskGroup:
                 file.write(str(task) + "\n")
                 
     def insert(self, index: int, task: Task):
-        if len(self.tasks) <= self.maxTasks:
+        if len(self.tasks) >= self.maxTasks:
             raise IndexError("Maximum index of tasks reach.")
         else: self.tasks.insert(index, task)

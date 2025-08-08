@@ -314,7 +314,7 @@ def main():
                 else:
                     # If no file selected, reset commandMenu to "WAIT"
                     ref2.set("WAIT")
-                    ref1.update()
+                    ref1.configure(text = "WAIT")
             
             case "Share":
                 folder_path = filedialog.askdirectory(
@@ -366,7 +366,7 @@ def main():
                 else:
                     # If no file selected, reset commandMenu to "WAIT"
                     ref2.set("WAIT")
-                    ref1.update()
+                    ref1.configure(text = "WAIT")
 
             case default:  # default case
                 print(color(buttonText, "red"), "clicked.")

@@ -1,0 +1,24 @@
+{
+  "name": "task-syntax",
+  "displayName": "Task Script Syntax",
+  "description": "Syntax highlighting for .task automation files",
+  "version": "0.0.6",
+  "publisher": "vn-tf",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [{
+      "id": "task",
+      "aliases": ["Task Script"],
+      "extensions": [".task"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "task",
+      "scopeName": "source.task",
+      "path": "./syntaxes/task.tmLanguage.json"
+    }]
+  }
+}

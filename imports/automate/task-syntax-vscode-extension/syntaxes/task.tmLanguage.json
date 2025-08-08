@@ -1,0 +1,65 @@
+{
+  "scopeName": "source.task",
+  "name": "task",
+  "patterns": [
+    {
+      "match": "\\A(#)\\s*(.*)$",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.comment.task"
+        },
+        "2": {
+          "name": "entity.name.function.task"
+        }
+      },
+      "comment": "First line - Title"
+    },
+    {
+      "match": "^(#)\\s*(.*@.*\\..*)$",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.comment.task"
+        },
+        "2": {
+          "name": "support.type.task"
+        }
+      },
+      "comment": "Email line - Author"
+    },
+    {
+      "match": "^(RCLICK|LCLICK|WAIT|KEY|OPEN|TYPE|EXEC)(\\s+)(\\S.*?)(\\s+)(\\d+)(\\s+)(.+)$",
+      "captures": {
+        "1": {
+          "name": "keyword.control.task"
+        },
+        "2": {
+          "name": "punctuation.separator.task"
+        },
+        "3": {
+          "name": "string.quoted.double.task"
+        },
+        "4": {
+          "name": "punctuation.separator.task"
+        },
+        "5": {
+          "name": "constant.numeric.task"
+        },
+        "6": {
+          "name": "punctuation.separator.task"
+        },
+        "7": {
+          "name": "variable.other.task"
+        }
+      },
+      "comment": "Task lines"
+    },
+    {
+      "name": "comment.line.task",
+      "match": "^#.*$",
+      "comment": "All other comments"
+    }
+  ],
+  "fileTypes": [
+    "task"
+  ]
+}

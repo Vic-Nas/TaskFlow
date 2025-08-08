@@ -22,7 +22,8 @@ matchAction.update({
     "WAIT": time.sleep,
     "KEY": pyautogui.hotkey,
     "OPEN": lambda path: openFile(path.replace("[SPACE]", " ")),
-    "TYPE": lambda *args: pyautogui.write(",".join(args).replace("[SPACE]", " "))
+    "TYPE": lambda *args: pyautogui.write(",".join(args).replace("[SPACE]", " ")),
+    "EXEC": lambda filePath: TaskGroup(filePath).run
     })
 
 class Task:
@@ -58,6 +59,9 @@ class Task:
         
         elif action == "TYPE":
             self.log = "Typed"
+            
+        elif action == "EXEC":
+            self.log = "Ran"
             
         else:
             raise ValueError(f"Uknown action: {action}")

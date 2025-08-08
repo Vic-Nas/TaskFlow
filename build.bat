@@ -7,7 +7,7 @@ echo ====================================
 
 :: Step 1: Run python build.py
 echo.
-echo [1/5] Running python build.py...
+echo [1/4] Running python build.py...
 python build.py
 if !errorlevel! neq 0 (
     echo ERROR: Failed to run python build.py
@@ -18,7 +18,7 @@ echo Python build completed successfully.
 
 :: Step 2: Clean the build/dist/TaskFlow folder
 echo.
-echo [2/5] Cleaning build/dist/TaskFlow folder...
+echo [2/4] Cleaning build/dist/TaskFlow folder...
 cd build\dist\TaskFlow
 if !errorlevel! neq 0 (
     echo ERROR: Cannot access build/dist/TaskFlow folder
@@ -48,7 +48,7 @@ cd ..\..\..
 
 :: Step 3: Create ZIP file
 echo.
-echo [3/5] Creating ZIP file...
+echo [3/4] Creating ZIP file...
 
 :: Check if compiled/win folder exists, create if not
 if not exist "compiled\win" (
@@ -72,29 +72,10 @@ if !errorlevel! neq 0 (
 )
 echo ZIP file created successfully.
 
-:: Step 4: Copy TaskFlow.exe to desktop
+
+:: Step 4: Final summary
 echo.
-echo [4/5] Copying TaskFlow.exe to desktop...
-set "destination=C:\Users\nasci\Desktop\TaskFlow"
-
-:: Create destination folder if it doesn't exist
-if not exist "!destination!" (
-    echo Creating destination folder...
-    mkdir "!destination!"
-)
-
-:: Copy TaskFlow.exe
-copy "build\dist\TaskFlow\TaskFlow.exe" "!destination!\TaskFlow.exe" /Y
-if !errorlevel! neq 0 (
-    echo ERROR: Failed to copy to desktop
-    pause
-    exit /b 1
-)
-echo TaskFlow.exe copied successfully to !destination!
-
-:: Step 5: Final summary
-echo.
-echo [5/5] All operations completed successfully!
+echo [4/4] All operations completed successfully!
 echo ====================================
 echo Summary:
 echo - Python build executed

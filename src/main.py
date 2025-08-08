@@ -194,6 +194,7 @@ def main():
                 selectedGroup = taskGroups[tasksListBox.curselection()[0]]
                 displaySelected()
                 print(color("Displaying", "green"), selectedGroup.title)
+
             case "Import Group":
                 filePath = filedialog.askopenfilename(
                 title = "Choose .task file",
@@ -286,7 +287,31 @@ def main():
                 except Exception as e:
                     alert("Error in Task")
                     print(e)
-            
+                    
+            case "LCLICK" | "RCLICK":
+                onClick("Detect Coords")
+                
+            case "EXEC":
+                # Clear the entry
+                widgets[ref]["entry"].delete(0, tkinter.END)
+                
+                # Open file dialog to select a file
+                file_selected = filedialog.askopenfilename(
+                    title="Select a file to open",
+                    initialdir=os.getcwd(),  # or another default directory
+                    filetypes=[
+                        ("Task file", "*.task")
+                    ]
+                )
+                
+                # If a file was selected
+                if file_selected:
+                    # Normalize the path and insert it into the entry
+                    normalized_path = os.path.normpath(file_selected)
+                    widgets[ref]["entry"].insert(0, normalized_path)
+                else:
+                    # If no file selected, reset commandMenu to "WAIT"
+                    ref.set("WAIT")   
             
             case "Share":
                 folder_path = filedialog.askdirectory(
@@ -371,15 +396,11 @@ def main():
     userLabel = tkinter.Label(highFrame, text = getSetting("email"), 
                             font = (fontStyle, 20, "bold"),
                             bg = highFrameBg, fg = "green",
-                            width = 25)
+                            width = 30)
 
     userLabel.grid(row = 0, column = 1, pady = 5, padx = 20)
 
-    detectCoordsButton = MyButton(highFrame, text = "Detect Coords",
-                                bg = "blue", fg = "white",
-                                font = (fontStyle, 14), borderwidth = 3
-                                )
-    detectCoordsButton.grid(row = 0, column = 2, padx = 10)
+    # One button removed here
 
     newGroupButton = MyButton(highFrame, text = "New Group",
                             bg = "orange", fg = "white",
@@ -683,8 +704,7 @@ def main():
                 'desc': descEntry,
                 "times": timesEntry,
                 "task": task
-            }
-            
+            }            
             
             
             widgets.update(backup)

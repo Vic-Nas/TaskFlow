@@ -123,7 +123,8 @@ goto :restart
 
 :restart
 echo Starting updated application... >> update.log
-start "" "{currentExePath}"
+start /min "" "{currentExePath}"
+timeout /t 1 /nobreak > nul
 goto :cleanup
 
 :cleanup
@@ -140,8 +141,11 @@ del "%~0"
     with open(batPath, "w") as batFile:
         batFile.write(batScript)
     
-    # Launch batch
-    subprocess.Popen([batPath], cwd=os.path.dirname(currentExePath))
+    # Launch batch silently and exit current process
+    subprocess.Popen([batPath], cwd=os.path.dirname(currentExePath), creationflags=subprocess.CREATE_NO_WINDOW)
+    
+    # Exit current process to avoid relaunch loop
+    sys.exit(0)
     
     
 def reload():

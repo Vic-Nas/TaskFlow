@@ -4,16 +4,18 @@ from imports.utils import centerWin
 import webbrowser
 from pathlib import Path
 from imports.automate.TaskDef import TaskGroup, matchAction, Task
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from shutil import copy, copy2
 from imports.automate.detectCoords import SimpleCircleOverlay
 
-from pymsgbox import alert, prompt
-import tkinter, sys, pyautogui, zipfile, subprocess, time, os, socket
-
+from pymsgbox import prompt
+import tkinter, sys, pyautogui, subprocess, time, os, socket
+from imports.mail import sendFeedBackMail
+alert = lambda message: messagebox.showinfo("Info", message)
 
 
 overlay = None
+feedBackWindow = None
 
 import urllib.request
 
@@ -152,7 +154,7 @@ def reload():
     main()
 
 def main():
-    global root, overlay
+    global root, overlay, feedBackWindow
     filePaths = {}
     widgets = {}
     tasksDir = "tasks"
@@ -181,7 +183,7 @@ def main():
 
     def onClick(buttonText, ref1 = None, ref2 = None):
         global selectedGroup
-        global overlay
+        global overlay, feedBackWindow
         match buttonText:
             case "☕ Buy me a coffee":
                 webbrowser.open("https://coff.ee/vicnas")
@@ -367,6 +369,51 @@ def main():
                     # If no file selected, reset commandMenu to "WAIT"
                     ref2.set("WAIT")
                     ref1.configure(text = "WAIT")
+            
+            case "FeedBack":
+                if feedBackWindow:
+                    feedBackWindow.destroy()
+
+                feedBackWindow = tkinter.Tk()
+                feedBackWindow.title("Send Feedback")
+                feedBackWindow.geometry("400x300")
+                centerWin(feedBackWindow)
+
+                attachedFiles = []
+
+                def selectFiles():
+                    files = tkinter.filedialog.askopenfilenames(title="Select files")
+                    if files:
+                        attachedFiles.clear()
+                        attachedFiles.extend(files)
+                        fileLabel.config(text=f"{len(files)} file(s) selected")
+
+                def send():
+                    text = textBox.get("1.0", "end").strip()
+                    if not text:
+                        messagebox.showwarning("Empty", "Please write some feedback.")
+                        return
+                    try:
+                        sendFeedBackMail(getSetting("email"), text, *attachedFiles)
+                        messagebox.showinfo("Sent", "Feedback sent successfully.")
+                        feedBackWindow.destroy()
+                    except Exception as e:
+                        messagebox.showerror("Error", f"Failed to send feedback:\n{e}")
+
+                textBox = tkinter.Text(feedBackWindow, height=10, wrap="word")
+                textBox.pack(padx=10, pady=(10, 5), fill="both", expand=True)
+
+                fileLabel = tkinter.Label(feedBackWindow, text="No files selected", anchor="w")
+                fileLabel.pack(padx=10, fill="x")
+
+                selectBtn = tkinter.Button(feedBackWindow, text="Add files", command=selectFiles)
+                selectBtn.pack(padx=10, pady=5)
+
+                sendBtn = tkinter.Button(feedBackWindow, text="Send", command=send)
+                sendBtn.pack(padx=10, pady=10)
+
+                feedBackWindow.mainloop()
+
 
             case default:  # default case
                 print(color(buttonText, "red"), "clicked.")
@@ -399,11 +446,15 @@ def main():
     userLabel = tkinter.Label(highFrame, text = getSetting("email"), 
                             font = (fontStyle, 20, "bold"),
                             bg = highFrameBg, fg = "green",
-                            width = 34)
+                            width = 25)
 
     userLabel.grid(row = 0, column = 1, pady = 5, padx = 20)
 
-    # One button removed here
+    feedBackButton = MyButton(highFrame, text = "FeedBack",
+                                bg = "blue", fg = "white",
+                                font = (fontStyle, 14), borderwidth = 3
+                                )
+    feedBackButton.grid(row = 0, column = 2, padx = 10)
 
     newGroupButton = MyButton(highFrame, text = "New Group",
                             bg = "orange", fg = "white",

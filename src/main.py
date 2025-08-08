@@ -136,7 +136,7 @@ def main():
                     
                 except Exception as e:
                     print(e)
-                    alert("Can't run that task.")
+                    alert(f"Can't run that task:\n{e}")
                 
             case "Save":
                 try:

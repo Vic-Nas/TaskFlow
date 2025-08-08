@@ -5,12 +5,23 @@ from collections import defaultdict
 
 matchAction = defaultdict(lambda *args: None)
 
+import os, platform, subprocess
+
+def openFile(path):
+    if platform.system() == 'Windows':
+        os.startfile(path)
+    elif platform.system() == 'Darwin':
+        subprocess.run(['open', path])
+    else:
+        subprocess.run(['xdg-open', path])
+
+
 matchAction.update({
     "RCLICK": pyautogui.rightClick,
     "LCLICK": pyautogui.click,
     "WAIT": time.sleep,
     "KEY": pyautogui.hotkey,
-    "OPEN": open,
+    "OPEN": lambda path: openFile(path.replace("[SPACE]", " ")),
     "TYPE": lambda *args: pyautogui.write(",".join(args).replace("[SPACE]", " "))
     })
 

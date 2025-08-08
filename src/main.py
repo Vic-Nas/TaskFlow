@@ -376,17 +376,20 @@ def main():
 
                 feedBackWindow = tkinter.Tk()
                 feedBackWindow.title("Send Feedback")
-                feedBackWindow.geometry("400x300")
+                feedBackWindow.geometry("400x350")
                 centerWin(feedBackWindow)
 
                 attachedFiles = []
 
                 def selectFiles():
-                    files = tkinter.filedialog.askopenfilenames(title="Select files")
+                    files = filedialog.askopenfilenames(title="Select files")
                     if files:
-                        attachedFiles.clear()
-                        attachedFiles.extend(files)
-                        fileLabel.config(text=f"{len(files)} file(s) selected")
+                        # Append new files if not already added
+                        for f in files:
+                            if f not in attachedFiles:
+                                attachedFiles.append(f)
+                        # Update the label with file names
+                        fileListVar.set("\n".join([f.split("/")[-1] for f in attachedFiles]))
 
                 def send():
                     text = textBox.get("1.0", "end").strip()
@@ -400,19 +403,21 @@ def main():
                     except Exception as e:
                         messagebox.showerror("Error", f"Failed to send feedback:\n{e}")
 
-                textBox = tkinter.Text(feedBackWindow, height=10, wrap="word")
-                textBox.pack(padx=10, pady=(10, 5), fill="both", expand=True)
-
-                fileLabel = tkinter.Label(feedBackWindow, text="No files selected", anchor="w")
-                fileLabel.pack(padx=10, fill="x")
+                textBox = tkinter.Text(feedBackWindow, height=8, wrap="word")
+                textBox.pack(padx=10, pady=(10, 5), fill="x")
 
                 selectBtn = tkinter.Button(feedBackWindow, text="Add files", command=selectFiles)
-                selectBtn.pack(padx=10, pady=5)
+                selectBtn.pack(padx=10, pady=(5, 2))
+
+                fileListVar = tkinter.StringVar(value="No files selected")
+                fileLabel = tkinter.Label(feedBackWindow, textvariable=fileListVar, anchor="w", justify="left")
+                fileLabel.pack(padx=10, pady=(0, 5), fill="x")
 
                 sendBtn = tkinter.Button(feedBackWindow, text="Send", command=send)
                 sendBtn.pack(padx=10, pady=10)
-
+                
                 feedBackWindow.mainloop()
+
 
 
             case default:  # default case

@@ -309,7 +309,8 @@ def main():
                     widgets[ref]["entry"].insert(0, normalized_path)
                 else:
                     # If no file selected, reset commandMenu to "WAIT"
-                    ref.set("WAIT")   
+                    var = ref.cget('textvariable')
+                    var.set("WAIT")
             
             case "Share":
                 folder_path = filedialog.askdirectory(
@@ -360,7 +361,8 @@ def main():
                     widgets[ref]["entry"].insert(0, normalized_path)
                 else:
                     # If no file selected, reset commandMenu to "WAIT"
-                    ref.set("WAIT")
+                    var = ref.cget('textvariable')
+                    var.set("WAIT")
 
             case default:  # default case
                 print(color(buttonText, "red"), "clicked.")
@@ -594,7 +596,7 @@ def main():
                 width=7
             )
 
-            commandVar.trace('w', lambda *args: onClick(commandVar.get(), commandVar))
+            commandVar.trace('w', lambda *args: onClick(commandVar.get(), commandMenu))
             commandMenu.grid(row=row, column=1, sticky="ew", padx=2, pady=2)
             
             # Column 3: Entry for arguments

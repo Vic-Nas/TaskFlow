@@ -369,12 +369,11 @@ def main():
 
     class MyButton(tkinter.Button):
         def __init__(self, master, **kwargs):
+            # Si aucune command n'est fournie, utiliser onClick par défaut
+            if 'command' not in kwargs:
+                kwargs['command'] = lambda: onClick(self['text'], ref=self)
+            
             super().__init__(master, **kwargs)
-            
-            self.config(
-                command = lambda: onClick(self['text'], 
-                                            ref = self))
-            
             
     # High Frame
     highFrameBg = "violet"

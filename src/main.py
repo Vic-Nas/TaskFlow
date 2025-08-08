@@ -452,7 +452,7 @@ def main():
         anchor = "w", justify = "center"
     )
 
-    taskFlowButton.grid(row = 0, column = 0, pady = 5, padx = 15)
+    taskFlowButton.grid(row = 0, column = 0, pady = 5, padx = (15, 0))
 
 
     def normalizeEmail(email, maxLen):
@@ -473,17 +473,17 @@ def main():
 
 
     email = getSetting("email")
-    normalizedEmail = normalizeEmail(email, 22)
+    normalizedEmail = normalizeEmail(email, 35)
 
     userLabel = tkinter.Label(
         highFrame, 
         text=normalizedEmail,
-        font = ('Courier', 20, 'bold'),
+        font = ('Courier', 13, 'bold'),
         bg=highFrameBg, fg="green",
         anchor="w"
     )
 
-    userLabel.grid(row=0, column=1, pady=5, padx=10)
+    userLabel.grid(row=0, column=1, pady=5, padx=(8, 20))
 
 
 

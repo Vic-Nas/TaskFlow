@@ -302,7 +302,6 @@ def print_summary():
     print(f"   ├── {PROJECT_NAME}.exe")
     print(f"   ├── data/          (your original data folder)")
     print(f"   ├── src/           (your original src folder)")  
-    print(f"   ├── tasks/         (your original tasks folder)")
     print(f"   ├── imports/       (your original imports folder)")
     print(f"   └── [PyInstaller files...]")
     

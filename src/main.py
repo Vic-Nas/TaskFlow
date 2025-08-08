@@ -93,6 +93,7 @@ def main():
                 group = TaskGroup(title = title, 
                                   author = getSetting("email")
                                   )
+                group.tasks.append(Task("WAIT  1  1  No description"))
                 group.saveAt(Path("tasks")/f"{group.title}.task")
                 reload()
                 

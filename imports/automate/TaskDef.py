@@ -92,10 +92,11 @@ class Task:
 
             
 class TaskGroup:
-    def __init__(self, filePath = "", author = "", title = ""):
+    def __init__(self, filePath = "", author = "", title = "", maxTasks = 14):
         self.tasks: list[Task] = []
         self.author: str = author
         self.title: str = title
+        self.maxTasks = maxTasks
         try:
             with open(filePath) as file:
                 rows = file.readlines()
@@ -105,7 +106,7 @@ class TaskGroup:
                     self.author = rows[1][1:-1]
                 rows = list(filter(lambda x: x != "\n" and 
                         not x.startswith("#"), rows))
-                self.tasks.extend(list(map(Task, rows)))
+                self.tasks.extend(list(map(Task, rows[:self.maxTasks])))
         except Exception as e:
             print(e)
     
@@ -122,3 +123,8 @@ class TaskGroup:
             
             for task in self.tasks:
                 file.write(str(task) + "\n")
+                
+    def insert(self, index: int, task: Task):
+        if len(self.tasks) <= self.maxTasks:
+            raise IndexError("Maximum index of tasks reach.")
+        else: self.tasks.insert(index, task)

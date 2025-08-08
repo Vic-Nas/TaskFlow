@@ -216,9 +216,7 @@ def main():
                 except:
                     runGroupTimesEntry.delete(0, "end")
                     runGroupTimesEntry.insert(0, "1")
-                    onClick("Run Group")
-                
-                
+                    onClick("Run Group")          
                     
             case "New Group":
                 title = prompt("Group name: ")
@@ -252,9 +250,15 @@ def main():
             case "➕":
                 task = widgets[ref1]["task"]
                 newTask = Task("WAIT  1  1  No description")
-                selectedGroup.tasks.insert(selectedGroup.tasks.index(task) + 1, newTask)
-                selectedGroup.saveAt(filePaths[selectedGroup])
-                onClick("Select Group")
+                try:
+                    selectedGroup.insert(selectedGroup.tasks.index(task) + 1, newTask)
+                    selectedGroup.saveAt(filePaths[selectedGroup])
+                    onClick("Select Group")
+                except:
+                    message = f"Maximum number of tasks of this group: {selectedGroup.maxTasks}\n"
+                    message += "But you can combine task groups with EXEC command"
+                    alert(message)
+                    
                     
             case "Run":
                 try:
@@ -310,6 +314,7 @@ def main():
                 else:
                     # If no file selected, reset commandMenu to "WAIT"
                     ref2.set("WAIT")
+                    ref1.update()
             
             case "Share":
                 folder_path = filedialog.askdirectory(
@@ -361,6 +366,7 @@ def main():
                 else:
                     # If no file selected, reset commandMenu to "WAIT"
                     ref2.set("WAIT")
+                    ref1.update()
 
             case default:  # default case
                 print(color(buttonText, "red"), "clicked.")
@@ -393,7 +399,7 @@ def main():
     userLabel = tkinter.Label(highFrame, text = getSetting("email"), 
                             font = (fontStyle, 20, "bold"),
                             bg = highFrameBg, fg = "green",
-                            width = 33)
+                            width = 34)
 
     userLabel.grid(row = 0, column = 1, pady = 5, padx = 20)
 

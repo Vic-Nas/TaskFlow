@@ -94,10 +94,24 @@ if exist "{tempDir}\\TaskFlow.exe" (
         goto :restore
     )
     echo Update installed successfully >> update.log
+    echo Updating local version to {repoVersion}... >> update.log
 ) else (
     echo Downloaded executable not found >> update.log
     goto :restore
 )
+
+echo Creating version update script... >> update.log
+echo import sys, os > updateVersion.py
+echo sys.path.append(r'{appDir}') >> updateVersion.py
+echo try: >> updateVersion.py
+echo     from yourSettingsModule import setSetting >> updateVersion.py
+echo     setSetting('version', {repoVersion}) >> updateVersion.py
+echo     print('Version updated successfully') >> updateVersion.py
+echo except Exception as e: >> updateVersion.py
+echo     print(f'Version update failed: {{e}}') >> updateVersion.py
+echo os.remove(__file__) >> updateVersion.py
+
+python updateVersion.py >> update.log 2>&1
 
 goto :restart
 
@@ -128,7 +142,8 @@ del "%~0"
     
     # Launch batch
     subprocess.Popen([batPath], cwd=os.path.dirname(currentExePath))
-
+    
+    
 def reload():
     print(color("Reloading window", "cyan"))
     root.destroy()

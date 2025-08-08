@@ -441,10 +441,12 @@ def main():
     highFrame.pack()
     highFrame.grid_propagate(False)
 
-    taskFlowButton = MyButton(highFrame, text = "TaskFlow", borderwidth = 0,
-                                    font = (fontStyle, 20, "bold"), 
-                                    bg = highFrameBg, fg = "white",
-                                    )
+    taskFlowButton = MyButton(
+        highFrame, 
+        text = "TaskFlow v" + getSetting("version"), 
+        borderwidth = 0, font = (fontStyle, 20, "bold"), 
+        bg = highFrameBg, fg = "white",
+    )
 
     taskFlowButton.grid(row = 0, column = 0, pady = 5)
 

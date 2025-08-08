@@ -21,9 +21,9 @@ matchAction.update({
     "LCLICK": pyautogui.click,
     "WAIT": time.sleep,
     "KEY": pyautogui.hotkey,
-    "OPEN": lambda path: openFile(path.replace("[SPACE]", " ")),
+    "OPEN": lambda filePath: openFile(filePath.replace("[SPACE]", " ")),
     "TYPE": lambda *args: pyautogui.write(",".join(args).replace("[SPACE]", " ")),
-    "EXEC": lambda filePath: TaskGroup(filePath).run
+    "EXEC": lambda filePath: TaskGroup(filePath).run(filePath.replace("[SPACE]", " "))
     })
 
 class Task:

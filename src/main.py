@@ -396,7 +396,7 @@ def main():
     userLabel = tkinter.Label(highFrame, text = getSetting("email"), 
                             font = (fontStyle, 20, "bold"),
                             bg = highFrameBg, fg = "green",
-                            width = 30)
+                            width = 35)
 
     userLabel.grid(row = 0, column = 1, pady = 5, padx = 20)
 

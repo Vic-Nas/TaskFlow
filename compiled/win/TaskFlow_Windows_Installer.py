@@ -43,7 +43,7 @@ def download_and_extract():
         zip_path = Path(temp_dir) / "TaskFlow.zip"
         
         try:
-            # Download ZIP file
+            # Download ZIP file directly
             urllib.request.urlretrieve(zip_url, zip_path)
             print("Download completed.")
             
@@ -55,12 +55,7 @@ def download_and_extract():
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 zip_ref.extractall(extract_path)
             
-            # Find extracted files
-            extracted_files = list(extract_path.rglob("*"))
-            if not extracted_files:
-                print("ERROR: No files found in ZIP archive")
-                return None
-                
+            # Return the extracted folder
             return extract_path
             
         except Exception as e:

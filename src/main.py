@@ -15,63 +15,73 @@ overlay = None
 
 import urllib.request
 
-def updateWin(root):
-    import os
-    import sys
-    import subprocess
+def updateWindows():
+    import tkinter as tk
     import tkinter.ttk as ttk
-
-    url = "https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow/TaskFlow.exe"
-    temp_dir = os.path.abspath("temp_update")
-    os.makedirs(temp_dir, exist_ok=True)
-    new_exe_path = os.path.join(temp_dir, "TaskFlow.exe")
-
+    import requests
+    import json
+    
     try:
-        urllib.request.urlretrieve(url, new_exe_path)
-    except Exception as e:
-        print(f"Download failed: {e}")
+        # Get local version
+        localVersion = getSetting("version")
+        
+        # Get repository version
+        repoUrl = "https://raw.githubusercontent.com/Vic-Nas/TaskFlow/main/data/settings.json"
+        response = requests.get(repoUrl, timeout=10)
+        response.raise_for_status()
+        
+        repoSettings = response.json()
+        repoVersion = repoSettings.get("value")
+        
+        # Check if update is needed
+        if localVersion == repoVersion:
+            return
+        
+    except requests.RequestException as e:
         return
-
-    current_exe_path = os.path.abspath(sys.executable)
-    exe_name = os.path.basename(current_exe_path)
-
-    label = ttk.Label(root, text="Preparing update...")
-    label.pack(pady=20)
-
-    progress = ttk.Progressbar(root, mode="indeterminate", length=280)
-    progress.pack(pady=10)
-    progress.start()
-
-    def start():
-        bat_script = f"""@echo off
-echo Waiting for the application to close...
-:loop
-tasklist /FI "IMAGENAME eq {exe_name}" 2>NUL | find /I /N "{exe_name}" >NUL
-if "%ERRORLEVEL%"=="0" (
-    timeout /t 1 /nobreak >NUL
-    goto loop
+    except json.JSONDecodeError as e:
+        return
+    except Exception as e:
+        return
+    
+    tempDir = os.path.abspath("tempUpdate")
+    
+    # Get the actual executable path (works for both .py and .exe)
+    if getattr(sys, 'frozen', False):
+        # Running as compiled exe
+        currentExePath = sys.executable
+    else:
+        # Running as python script
+        currentExePath = os.path.abspath(sys.argv[0])
+    
+    exeName = os.path.basename(currentExePath)
+    
+    # Create temp dir
+    os.makedirs(tempDir, exist_ok=True)
+    
+    # Create batch script
+    batScript = f"""@echo off
+echo Update started - Local version: {localVersion}, Repository version: {repoVersion} > update.log
+echo Cleaning temp directory... >> update.log
+if exist "{tempDir}" (
+    rmdir /s /q "{tempDir}"
+    echo Temp directory removed successfully >> update.log
+) else (
+    echo Temp directory not found >> update.log
 )
-echo Copying from "{new_exe_path}" to "{current_exe_path}"
-copy /Y "{new_exe_path}" "{current_exe_path}"
-echo Cleaning up...
-rmdir /S /Q "{temp_dir}"
-del "%~f0"
+echo Restarting application... >> update.log
+start "" "{exeName}"
+echo Update finished successfully >> update.log
+del "%~0"
 """
-
-        bat_path = os.path.join(os.path.dirname(current_exe_path), "update.bat")
-        with open(bat_path, "w") as bat_file:
-            bat_file.write(bat_script)
-
-        subprocess.Popen([bat_path], shell=True)
-        root.withdraw()
-        sys.exit()
-
-    root.after(1000, start)
-
-
-
-
-
+    
+    batPath = os.path.join(os.path.dirname(currentExePath), "update.bat")
+    
+    with open(batPath, "w") as batFile:
+        batFile.write(batScript)
+    
+    # Launch batch
+    subprocess.Popen([batPath], cwd=os.path.dirname(currentExePath))
 
 def reload():
     print(color("Reloading window", "cyan"))
@@ -79,6 +89,11 @@ def reload():
     main()
 
 def main():
+    try:
+        exec("update" + platform.system() + "()")
+        alert("Up to date")
+    except Exception as e:
+        alert(f"Couldn't update:\n{e}")
     global root, overlay
     filePaths = {}
     widgets = {}
@@ -263,15 +278,7 @@ def main():
                 else:
                     # If no file selected, reset commandMenu to "WAIT"
                     ref.set("WAIT")
-                    
-            case "Update":
-                onClick("Update" + platform.system())
-                
-            case "UpdateWindows":
-                updateWin()
-                # Quitter l'appli pour que la maj se fasse correctement
-                sys.exit()
-                
+
             case default:  # default case
                 print(color(buttonText, "red"), "clicked.")
                 if default not in matchAction.keys():
@@ -304,7 +311,7 @@ def main():
     userLabel = tkinter.Label(highFrame, text = getSetting("email"), 
                             font = (fontStyle, 20, "bold"),
                             bg = highFrameBg, fg = "green",
-                            width = 20)
+                            width = 25)
 
     userLabel.grid(row = 0, column = 1, pady = 5, padx = 20)
 
@@ -333,14 +340,6 @@ def main():
                                     )
     buyCoffeeButton.grid(row = 0, column = 5, padx = (10, 0))
     
-    updateButton = MyButton(
-        highFrame,
-        text = "Update",
-        font = (fontStyle, 14, "bold"),
-        borderwidth = 3, fg = "white", 
-        bg = "green",  
-        )
-    updateButton.grid(row = 0, column = 6, padx = 10)
 
     # TasksFrame
     groupTasksFrame = tkinter.Frame(root)

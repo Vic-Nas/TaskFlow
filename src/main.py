@@ -150,9 +150,8 @@ def reload():
     main()
 
 def main():
-    global root, overlay, feedBackWindow
+    global root, overlay, feedBackWindow, selectedGroup
     filePaths = {}
-    widgets = {}
     tasksDir = "tasks"
     taskGroups: list[TaskGroup] = []
 
@@ -176,8 +175,13 @@ def main():
     centerWin(root)
     fontStyle = "Times New Roman"
 
+    def findTaskByWidget(widget):
+        for t in selectedGroup.tasks:
+            if widget in t._extra.values():
+                return t
+        return None
 
-    def onClick(buttonText, ref1 = None, ref2 = None):
+    def onClick(buttonText, refToButton = None):
         global selectedGroup
         global overlay, feedBackWindow
         match buttonText:
@@ -210,7 +214,7 @@ def main():
                     times = int(times)
                     for _ in range(times):
                         for task in selectedGroup.tasks:
-                            widgets[task]["run"].invoke()
+                            task["run"].invoke()
                 except:
                     runGroupTimesEntry.delete(0, "end")
                     runGroupTimesEntry.insert(0, "1")
@@ -238,140 +242,141 @@ def main():
                     overlay.close_app()
                 overlay = SimpleCircleOverlay()
                 overlay.run()
-                    
+
+
             case "❌":
-                task = widgets[ref1]["task"]
-                selectedGroup.tasks.remove(task)
-                selectedGroup.saveAt(filePaths[selectedGroup])
-                onClick("Select Group")
-                
-            case "➕":
-                task = widgets[ref1]["task"]
-                newTask = Task("WAIT  1  1  No description")
-                try:
-                    selectedGroup.insert(selectedGroup.tasks.index(task) + 1, newTask)
+                task = findTaskByWidget(refToButton)
+                if task:
+                    selectedGroup.tasks.remove(task)
                     selectedGroup.saveAt(filePaths[selectedGroup])
                     onClick("Select Group")
-                except:
-                    message = f"Maximum number of tasks of this group: {selectedGroup.maxTasks}\n"
-                    message += "But you can combine task groups with EXEC command"
-                    alert(message)
-                    
-                    
+
+            case "➕":
+                task = findTaskByWidget(refToButton)
+                if task:
+                    newTask = Task("WAIT  1  1  No description")
+                    try:
+                        selectedGroup.insert(selectedGroup.tasks.index(task) + 1, newTask)
+                        selectedGroup.saveAt(filePaths[selectedGroup])
+                        onClick("Select Group")
+                    except:
+                        message = (
+                            f"Maximum number of tasks of this group: {selectedGroup.maxTasks}\n"
+                        )
+                        message += "But you can combine task groups with EXEC command"
+                        alert(message)
+
             case "Run":
                 try:
-                    widgets[widgets[ref1]["task"]]["save"].invoke()
-                    widgets[ref1]["task"].run()
-                    
+                    task = findTaskByWidget(refToButton)
+                    if task:
+                        task["save"].invoke()
+                        task.run()
+
                 except pyautogui.FailSafeException:
                     print("Failsafe activated - TaskFlow will exit")
                     alert("Failsafe triggered! TaskFlow is shutting down.")
                     os._exit(0)
-                    
+
                 except Exception as e:
                     print(e)
                     alert(f"Can't run that task:\n{e}")
-                
+
             case "Save":
                 try:
-                    params = " ".join(widgets[ref1]["args"].get().replace(" ", "[SPACE]").split(","))
-                    command = widgets[ref1]["command"].get()
-                    desc = widgets[ref1]["desc"].get()
-                    times = widgets[ref1]["times"].get()
-                    newTask = Task("  ".join(
-                        [command, params, times, desc]
-                    ))
-                    widgets[ref1]["task"].update(newTask)
-                    selectedGroup.saveAt(filePaths[selectedGroup])
-            
+                    task = findTaskByWidget(refToButton)
+                    if task:
+                        params = " ".join(
+                            task["argsEntry"].get().replace(" ", "[SPACE]").split(",")
+                        )
+                        command = task["commandVar"].get()
+                        desc = task["descEntry"].get()
+                        times = task["timesEntry"].get()
+
+                        newTask = Task("  ".join([command, params, times, desc]))
+                        task.update(newTask)
+                        selectedGroup.saveAt(filePaths[selectedGroup])
+
                 except Exception as e:
                     alert("Error in Task")
                     print(e)
-                    
+
             case "LCLICK" | "RCLICK":
                 onClick("Detect Coords")
-                
+
             case "EXEC":
-                # Clear the entry
-                widgets[ref1]["entry"].delete(0, tkinter.END)
-                
-                # Open file dialog to select a file
-                file_selected = filedialog.askopenfilename(
-                    title="Select a file to open",
-                    initialdir=os.getcwd(),  # or another default directory
-                    filetypes=[
-                        ("Task file", "*.task")
-                    ]
-                )
-                
-                # If a file was selected
-                if file_selected:
-                    # Normalize the path and insert it into the entry
-                    normalized_path = os.path.normpath(file_selected)
-                    widgets[ref1]["entry"].insert(0, normalized_path)
-                else:
-                    # If no file selected, reset commandMenu to "WAIT"
-                    ref2.set("WAIT")
-                    ref1.configure(text = "WAIT")
-            
+                task = findTaskByWidget(refToButton)
+                if task:
+                    task["argsEntry"].delete(0, tkinter.END)
+
+                    fileSelected = filedialog.askopenfilename(
+                        title="Select a file to open",
+                        initialdir=os.getcwd(),
+                        filetypes=[("Task file", "*.task")]
+                    )
+
+                    if fileSelected:
+                        normalizedPath = os.path.normpath(fileSelected)
+                        task["argsEntry"].insert(0, normalizedPath)
+                    else:
+                        task["commandVar"].set("WAIT")
+                        task["commandMenu"].configure(text="WAIT")
+
             case "KEY":
-                menu = ref1
-                entry = widgets[menu]["entry"]
-                entry.delete(0, "end")
-                entry.insert(0, "win,d")
-            
+                task = findTaskByWidget(refToButton)
+                if task:
+                    entry = task["argsEntry"]
+                    entry.delete(0, "end")
+                    entry.insert(0, "win,d")
+
             case "Share":
-                folder_path = filedialog.askdirectory(
-                title = "Select folder to save task file",
-                initialdir = "."  # Current folder as default
-            )
-            
-                if folder_path:  # If user didn't cancel
+                folderPath = filedialog.askdirectory(
+                    title="Select folder to save task file",
+                    initialdir="."
+                )
+
+                if folderPath:
                     try:
-                        # Complete destination path
-                        destination = os.path.join(folder_path, f"{selectedGroup.title.replace(" ", "_")}.task")
-                        
-                        # Copy task file to chosen folder
+                        destination = os.path.join(
+                            folderPath,
+                            f"{selectedGroup.title.replace(' ', '_')}.task"
+                        )
                         copy2(filePaths[selectedGroup], destination)
                         print(f"Task file saved to: {destination}")
-                        
+
                     except FileNotFoundError:
                         print("Error: task.task file not found")
                     except Exception as e:
                         print(f"Error saving file: {e}")
                 else:
                     print("Save cancelled")
-                    
+
             case t if t.startswith("TaskFlow"):
                 webbrowser.open("https://vic-nas.github.io/TaskFlow/")
                 print("Visiting website")
-                
+
             case "OPEN":
-                # Clear the entry
-                widgets[ref1]["entry"].delete(0, tkinter.END)
-                
-                # Open file dialog to select a file
-                file_selected = filedialog.askopenfilename(
-                    title="Select a file to open",
-                    initialdir=os.getcwd(),  # or another default directory
-                    filetypes=[
-                        ("All files", "*.*"),
-                        ("Text files", "*.txt"),
-                        ("Python files", "*.py"),
-                        # Add other file types as needed
-                    ]
-                )
-                
-                # If a file was selected
-                if file_selected:
-                    # Normalize the path and insert it into the entry
-                    normalized_path = os.path.normpath(file_selected)
-                    widgets[ref1]["entry"].insert(0, normalized_path)
-                else:
-                    # If no file selected, reset commandMenu to "WAIT"
-                    ref2.set("WAIT")
-                    ref1.configure(text = "WAIT")
-            
+                task = findTaskByWidget(refToButton)
+                if task:
+                    task["argsEntry"].delete(0, tkinter.END)
+
+                    fileSelected = filedialog.askopenfilename(
+                        title="Select a file to open",
+                        initialdir=os.getcwd(),
+                        filetypes=[
+                            ("All files", "*.*"),
+                            ("Text files", "*.txt"),
+                            ("Python files", "*.py"),
+                        ]
+                    )
+
+                    if fileSelected:
+                        normalizedPath = os.path.normpath(fileSelected)
+                        task["argsEntry"].insert(0, normalizedPath)
+                    else:
+                        task["commandVar"].set("WAIT")
+                        task["commandMenu"].configure(text="WAIT")
+
             case "FeedBack":
                 if feedBackWindow:
                     feedBackWindow.destroy()
@@ -380,19 +385,16 @@ def main():
                 feedBackWindow.title("Send Feedback")
                 feedBackWindow.geometry("400x350")
                 centerWin(feedBackWindow)
-                feedBackWindow.transient()  # Reste devant la fenêtre principale
-                feedBackWindow.grab_set()   # Bloque l’interaction avec les autres fenêtres tant que celle-ci est ouverte
+                feedBackWindow.transient()
+                feedBackWindow.grab_set()
 
                 attachedFiles = []
 
                 def selectFiles():
                     files = filedialog.askopenfilenames(title="Select files")
                     if files:
-                        # Ajouter seulement les fichiers non encore présents
                         newFiles = [f for f in files if f not in attachedFiles]
                         attachedFiles.extend(newFiles)
-
-                        # Mettre à jour l’affichage des noms
                         fileListVar.set("\n".join([f.split("/")[-1] for f in attachedFiles]))
 
                 def send():
@@ -420,17 +422,15 @@ def main():
                 sendBtn = tkinter.Button(feedBackWindow, text="Send", command=send)
                 sendBtn.pack(padx=10, pady=10)
 
-
-            case default:  # default case
+            case default:
                 print(color(buttonText, "red"), "clicked.")
                 if default not in matchAction.keys():
                     alert("Unavailable for now.")
 
     class MyButton(tkinter.Button):
         def __init__(self, master, **kwargs):
-            # Si aucune command n'est fournie, utiliser onClick par défaut
             if 'command' not in kwargs:
-                kwargs['command'] = lambda: onClick(self['text'], ref1=self)
+                kwargs['command'] = lambda: onClick(self['text'], refToButton=self)
             
             super().__init__(master, **kwargs)
             
@@ -679,7 +679,7 @@ def main():
                 tasksFrame,
                 commandVar,
                 *matchAction.keys(),
-                command = lambda varVal: onClick(varVal, commandMenu, commandVar)
+                command = lambda varVal: onClick(varVal, commandMenu)
             )
             commandMenu.config(
                 font=(fontStyle, 16, "bold"),
@@ -770,39 +770,19 @@ def main():
             addDownButton.grid(row = row, column = 7, sticky = "ew", 
                            padx = 2, pady = 2)
             
-            
-            # Store widgets for future reference
-            backup[task] = {
-                'run': runTaskBtn,
-                'save': saveBtn
-            }
-            backup[runTaskBtn]= {
-                "task": task
-            }
-            backup[delButton] = {
-                "task": task
-            }
-            backup[addDownButton] = {
-                "task": task
-            }
-            
-            
-            backup[commandMenu] = {
-                "entry": argsEntry
-            }
-            
-            
-            backup[saveBtn] = {
-                "args": argsEntry,
-                'command': commandVar,
-                'desc': descEntry,
-                "times": timesEntry,
-                "task": task
-            }            
-            
-            
-            widgets.update(backup)
-
+            task.update(
+                {
+                    "run": runTaskBtn,
+                    "save": saveBtn,
+                    "del": delButton,
+                    "addDown": addDownButton,
+                    "commandMenu": commandMenu,
+                    "commandVar": commandVar,
+                    "argsEntry": argsEntry,
+                    "descEntry": descEntry,
+                    "timesEntry": timesEntry,
+                }
+            )
     
 
 

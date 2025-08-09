@@ -27,12 +27,15 @@ matchAction.update({
     })
 
 class Task:
-    def __init__(self, commandLine: str):
-        split = commandLine.split("  ")
-        if len(split) != 4:
-            print("Not enough parts:", commandLine)
-            split = ["None", "", "0", "Do Nothing"]
-        action, params, times, desc = split
+    def __init__(self, command_line: str):
+        self._extra = {}  # internal dict-like storage
+
+        parts = command_line.split("  ")
+        if len(parts) != 4:
+            print("Not enough parts:", command_line)
+            parts = ["None", "", "0", "Do Nothing"]
+
+        action, params, times, desc = parts
         self.params = params.split(" ")
         self.times = int(times)
         self.desc = desc
@@ -42,29 +45,41 @@ class Task:
         if action == "RCLICK":
             self.log = "RClicked at"
             self.params = list(map(float, self.params))
-            
         elif action == "LCLICK":
             self.log = "LClicked at"
             self.params = list(map(float, self.params))
-            
         elif action == "WAIT":
             self.log = "Waited"
             self.params = list(map(float, self.params))
-            
         elif action == "KEY":
             self.log = "Pressed"
-            
         elif action == "OPEN":
             self.log = "Opened"
-        
         elif action == "TYPE":
             self.log = "Typed"
-            
         elif action == "EXEC":
             self.log = "Ran"
-            
         else:
-            raise ValueError(f"Uknown action: {action}")
+            raise ValueError(f"Unknown action: {action}")
+
+    # --- dict-like access for extra data ---
+    def __getitem__(self, key):
+        return self._extra.get(key, None)  # default None
+
+    def __setitem__(self, key, value):
+        self._extra[key] = value
+
+    def __delitem__(self, key):
+        if key in self._extra:
+            del self._extra[key]
+
+    def __contains__(self, key):
+        return key in self._extra
+
+    def update(self, other: dict):
+        """Update internal dict-like storage with another dict."""
+        self._extra.update(other)
+
         
     def run(self):
         for _ in range(self.times):
@@ -85,10 +100,17 @@ class Task:
         
         return "  ".join(parts)
     
-    def update(self, other):
-        for k, v in other.__dict__.items():
-            if k not in []:  # Blacklist
-                setattr(self, k, v)
+    def update(self, other = None):
+        if other is None:
+            return
+        if isinstance(other, dict):
+            self._extra.update(other)
+        elif isinstance(other, Task):
+            self._extra.update(other._extra)
+        else:
+            raise TypeError("update() accepts a dict or Task instance")
+
+
 
             
 class TaskGroup:

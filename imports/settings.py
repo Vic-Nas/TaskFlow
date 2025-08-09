@@ -2,7 +2,7 @@
 from json import dump, load
 import tkinter
 from imports.mail import sendVerifiMail
-from imports.utils import centerWin
+from imports.utils import centerWin, alert
 
 from pymsgbox import alert
 from random import randbytes
@@ -60,7 +60,8 @@ def checkCode(code, win):
         print("\tIt ain't")
         alert("Wrong code.")
     else: 
-        alert("You are logged in.")
+        warning = "You may need to add to antivirus exclusion path\nas it moves the mouse."
+        alert(["You are logged in.", warning], title = "Info", titles = ["Note", "Warning"])
         print("\tIt is.")
         setSetting("email", email)
         win.destroy()

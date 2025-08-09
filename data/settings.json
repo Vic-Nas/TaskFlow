@@ -1,14 +1,14 @@
 {
     "email": "",
     "coloredLogs": true,
-    "version": 6,
+    "version": 7,
     "new": {
         "fix": [
             "Wrong alert display."
         ],
         "add": [
-            "Add notices of fixes and added tools.",
-            "Minimize console when executing with python"
+            "Minimize console when executing with python",
+            "Alert User on antivired rejection."
         ]
     }
 }

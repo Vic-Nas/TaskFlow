@@ -12,3 +12,7 @@ KEY  ctrl a  1  Click Ctrl + a
 
 KEY  a  1  Click a
 
+EXEC  C:\Users\nasci\Desktop\Code\Github\TaskFlow\tasks\task1.task  1  T1
+
+WAIT  1.0  1  T2
+

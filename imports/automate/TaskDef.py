@@ -76,9 +76,10 @@ class Task:
     def __contains__(self, key):
         return key in self._extra
 
-    def update(self, other: dict):
-        """Update internal dict-like storage with another dict."""
-        self._extra.update(other)
+
+    def clear(self):
+        """Empty internal dict-like storage."""
+        self._extra.clear()
 
         
     def run(self):
@@ -100,16 +101,23 @@ class Task:
         
         return "  ".join(parts)
     
-    def update(self, other = None):
-        if other is None:
-            return
-        if isinstance(other, dict):
-            self._extra.update(other)
-        elif isinstance(other, Task):
-            self._extra.update(other._extra)
-        else:
-            raise TypeError("update() accepts a dict or Task instance")
+    def update(self, other, updateExtra = True):
+        if isinstance(other, Task):
+            # Copy core attributes
+            self.params = other.params
+            self.times = other.times
+            self.desc = other.desc
+            self.action = other.action
+            self.log = other.log
 
+            # Optionally merge _extra
+            if updateExtra:
+                self._extra.update(other._extra)
+
+        elif isinstance(other, dict):
+            self._extra.update(other)
+        else:
+            raise TypeError("update() expects a Task or dict")
 
 
             

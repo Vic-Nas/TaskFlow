@@ -151,6 +151,7 @@ def reload():
 
 def main():
     global root, overlay, feedBackWindow, selectedGroup
+    selectedGroup = None
     filePaths = {}
     tasksDir = "tasks"
     taskGroups: list[TaskGroup] = []
@@ -294,7 +295,7 @@ def main():
                         times = task["timesEntry"].get()
 
                         newTask = Task("  ".join([command, params, times, desc]))
-                        task.update(newTask)
+                        task.update(newTask, False)
                         selectedGroup.saveAt(filePaths[selectedGroup])
 
                 except Exception as e:
@@ -305,7 +306,8 @@ def main():
                 onClick("Detect Coords")
 
             case "EXEC":
-                task = findTaskByWidget(refToButton)
+                task = refToButton
+
                 if task:
                     task["argsEntry"].delete(0, tkinter.END)
 
@@ -323,7 +325,7 @@ def main():
                         task["commandMenu"].configure(text="WAIT")
 
             case "KEY":
-                task = findTaskByWidget(refToButton)
+                task = refToButton
                 if task:
                     entry = task["argsEntry"]
                     entry.delete(0, "end")
@@ -356,7 +358,7 @@ def main():
                 print("Visiting website")
 
             case "OPEN":
-                task = findTaskByWidget(refToButton)
+                task = refToButton
                 if task:
                     task["argsEntry"].delete(0, tkinter.END)
 
@@ -657,9 +659,13 @@ def main():
             headerLabel.grid(row=0, column=i, sticky="ew", padx=1, pady=1)
 
         # Widget creation for each task
+        
         backup = {}
+        
         for row, task in enumerate(selectedGroup.tasks, start = 1):
             # Column 1: Entry for description (default task.desc)
+            
+            
             command, args = str(task).split("  ")[:2]
             args = ",".join(args.split(" "))
             descEntry = tkinter.Entry(
@@ -679,7 +685,7 @@ def main():
                 tasksFrame,
                 commandVar,
                 *matchAction.keys(),
-                command = lambda varVal: onClick(varVal, commandMenu)
+                command = lambda varVal, t=task: onClick(varVal, t)
             )
             commandMenu.config(
                 font=(fontStyle, 16, "bold"),
@@ -692,6 +698,7 @@ def main():
             # commandVar.trace('w', lambda *args: onClick(commandVar.get(), commandMenu, commandVar))
             commandMenu.grid(row=row, column=1, sticky="ew", padx=2, pady=2)
             
+            
             # Column 3: Entry for arguments
             argsEntry = tkinter.Entry(
                 tasksFrame,
@@ -701,7 +708,7 @@ def main():
                 justify = "center",
                 width = 18
             )
-            
+                        
             argsEntry.insert(0, args.replace("[SPACE]", " "))
             argsEntry.grid(row=row, column=2, sticky="ew", padx=2, pady=2)
             
@@ -769,6 +776,7 @@ def main():
             )
             addDownButton.grid(row = row, column = 7, sticky = "ew", 
                            padx = 2, pady = 2)
+
             
             task.update(
                 {
@@ -780,10 +788,10 @@ def main():
                     "commandVar": commandVar,
                     "argsEntry": argsEntry,
                     "descEntry": descEntry,
-                    "timesEntry": timesEntry,
+                    "timesEntry": timesEntry
                 }
             )
-    
+            
 
 
     root.mainloop()

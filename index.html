@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskFlow - Automate Your Workflow</title>
+    <title>TaskFlow - Automate Your Workflows</title>
     <style>
         * {
             margin: 0;
@@ -12,550 +12,383 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
+            font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        .container {
-            max-width: 1200px;
+        .navbar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-content {
+            max-width: 1400px;
             margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 0 20px;
         }
 
-        header {
-            text-align: center;
-            padding: 60px 0;
+        .nav-logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #ffd700;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
             color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
         }
 
-        .logo {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: glow 2s ease-in-out infinite alternate;
+        .nav-links a:hover {
+            color: #ffd700;
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        @keyframes glow {
-            from { filter: drop-shadow(0 0 20px rgba(255,255,255,0.3)); }
-            to { filter: drop-shadow(0 0 30px rgba(255,255,255,0.6)); }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .tagline {
-            font-size: 1.3rem;
-            opacity: 0.9;
+        .header {
+            text-align: center;
             margin-bottom: 30px;
         }
 
-        .hero-description {
-            font-size: 1.1rem;
-            max-width: 600px;
-            margin: 0 auto 30px;
-            opacity: 0.85;
-            line-height: 1.8;
+        .logo {
+            font-size: 3.5em;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .github-badge {
-            display: inline-block;
-            background: rgba(0,0,0,0.2);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .github-badge:hover {
-            background: rgba(0,0,0,0.4);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        .tagline {
+            font-size: 1.3em;
+            color: #e0e0e0;
+            margin-bottom: 20px;
         }
 
         .main-content {
-            background: white;
-            border-radius: 20px;
-            margin: 40px auto;
-            padding: 60px 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-        }
-
-        .features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 30px;
-            margin: 50px 0;
+            flex: 1;
+            align-items: start;
         }
 
-        .feature-card {
-            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             padding: 30px;
-            border-radius: 15px;
-            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid rgba(0,0,0,0.05);
+            height: fit-content;
         }
 
-        .feature-card:hover {
+        .section:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
         }
 
-        .feature-icon {
-            font-size: 3rem;
+        .section h2 {
+            font-size: 1.8em;
             margin-bottom: 20px;
-            display: block;
-        }
-
-        .feature-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-
-        .feature-desc {
-            color: #666;
-            line-height: 1.6;
+            color: #ffd700;
+            text-align: center;
         }
 
         .download-section {
-            text-align: center;
-            margin: 60px 0;
-            padding: 40px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            border-radius: 20px;
-            color: white;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            animation: pulse 2s infinite;
         }
 
-        .download-title {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-        }
-
-        .download-subtitle {
-            font-size: 1.2rem;
-            margin-bottom: 40px;
-            opacity: 0.9;
-        }
-
-        .download-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            max-width: 900px;
-            margin: 0 auto;
-            align-items: stretch;
-        }
-
-        .download-card {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 15px;
-            padding: 30px;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .download-card:hover {
-            background: rgba(255,255,255,0.2);
-            transform: scale(1.05);
-        }
-
-        .windows-card {
-            border: 2px solid rgba(0,255,0,0.3);
-        }
-
-        .source-card {
-            border: 2px solid rgba(255,255,255,0.3);
-        }
-
-        .os-icon {
-            font-size: 4rem;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        .card-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .card-subtitle {
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            opacity: 0.9;
-        }
-
-        .card-description {
-            font-size: 0.95rem;
-            opacity: 0.8;
-            line-height: 1.5;
-            margin-bottom: 20px;
-            flex-grow: 1;
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
         }
 
         .download-btn {
-            background: linear-gradient(45deg, #00d4aa, #00a8ff);
+            display: block;
+            background: rgba(255, 255, 255, 0.2);
             color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
             text-decoration: none;
-            display: inline-block;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
         }
 
         .download-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-            background: linear-gradient(45deg, #00a8ff, #00d4aa);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .github-btn {
-            background: linear-gradient(45deg, #24292e, #444d56);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        .download-btn.primary {
+            background: #ffd700;
+            color: #333;
+            font-size: 1.4em;
+            border: 2px solid #ffed4e;
         }
 
-        .github-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-            background: linear-gradient(45deg, #444d56, #24292e);
+        .download-btn.primary:hover {
+            background: #ffed4e;
+            transform: scale(1.05);
         }
 
-        .platforms-info {
-            background: rgba(0,0,0,0.1);
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 30px;
-            font-size: 0.95rem;
+        .feature-list {
+            list-style: none;
         }
 
-        .how-it-works {
-            margin: 60px 0;
-            text-align: center;
-        }
-
-        .section-title {
-            font-size: 2.5rem;
-            margin-bottom: 40px;
-            color: #2c3e50;
-            font-weight: 700;
-        }
-
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 40px;
-            margin-top: 40px;
-        }
-
-        .step {
+        .feature-list li {
+            margin: 15px 0;
+            padding-left: 25px;
             position: relative;
+            font-size: 1.1em;
         }
 
-        .step-number {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin: 0 auto 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        .feature-list li:before {
+            content: "✨";
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
         }
 
-        .step-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #2c3e50;
+        .command-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
         }
 
-        .step-desc {
-            color: #666;
-            line-height: 1.6;
-        }
-
-        .code-example {
-            background: #2d3748;
-            color: #e2e8f0;
-            padding: 25px;
-            border-radius: 15px;
-            margin: 30px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            overflow-x: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .code-comment {
-            color: #68d391;
-        }
-
-        footer {
-            background: rgba(0,0,0,0.1);
-            color: white;
+        .command-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 8px;
             text-align: center;
-            padding: 40px 0;
-            margin-top: 60px;
+            font-weight: bold;
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.3);
         }
 
-        @media (max-width: 768px) {
-            .logo {
-                font-size: 2.5rem;
-            }
-            
+        .info-link {
+            display: inline-block;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .info-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .footer a {
+            color: #ffd700;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: #ffed4e;
+            text-decoration: underline;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #e0e0e0;
+        }
+
+        @media (max-width: 1024px) {
             .main-content {
-                padding: 40px 20px;
-                margin: 20px;
+                grid-template-columns: 1fr;
+                gap: 20px;
             }
             
-            .download-options {
-                grid-template-columns: 1fr;
+            .container {
+                height: auto;
+                min-height: 100vh;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html" class="nav-logo">TaskFlow</a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="info.html">Commands</a>
+                <a href="https://github.com/Vic-Nas/TaskFlow">GitHub</a>
+                <a href="https://vic-nas.github.io/portfolio/">Portfolio</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="header">
             <h1 class="logo">TaskFlow</h1>
-            <p class="tagline">Automate Your Workflow with Precision</p>
-            <p class="hero-description">
-                Create powerful automation sequences with TaskGroups. Streamline repetitive tasks, 
-                boost productivity, and take control of your digital workflow with our intuitive 
-                automation framework.
-            </p>
-            <a href="https://github.com/Vic-Nas/TaskFlow" class="github-badge" target="_blank">
-                ⭐ View on GitHub
-            </a>
+            <p class="tagline">Automate Your Workflows with Simple Visual Commands</p>
         </div>
-    </header>
 
-    <main class="container">
         <div class="main-content">
-            <section class="features">
-                <div class="feature-card">
-                    <span class="feature-icon">🎯</span>
-                    <h3 class="feature-title">Precise Automation</h3>
-                    <p class="feature-desc">Execute mouse clicks, keyboard inputs, and system actions with pixel-perfect accuracy and timing control.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">📝</span>
-                    <h3 class="feature-title">Simple Scripting</h3>
-                    <p class="feature-desc">Create TaskGroups using our intuitive command syntax. No complex programming required - just define actions and parameters.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">⚡</span>
-                    <h3 class="feature-title">Lightning Fast</h3>
-                    <p class="feature-desc">Built with Python and optimized for performance. Execute complex workflows in seconds, not minutes.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">💾</span>
-                    <h3 class="feature-title">Save & Share</h3>
-                    <p class="feature-desc">Export your TaskGroups to files and share them with your team. Collaboration made simple.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">🔄</span>
-                    <h3 class="feature-title">Repeatable Actions</h3>
-                    <p class="feature-desc">Set repetition counts for each task. Perfect for batch operations and iterative processes.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <span class="feature-icon">🎮</span>
-                    <h3 class="feature-title">Multi-Platform</h3>
-                    <p class="feature-desc">Works seamlessly across Windows, macOS, and Linux. One tool for all your automation needs.</p>
-                </div>
-            </section>
-
-            <section class="how-it-works">
-                <h2 class="section-title">How It Works</h2>
-                
-                <div class="steps">
-                    <div class="step">
-                        <div class="step-number">1</div>
-                        <h3 class="step-title">Create TaskGroups</h3>
-                        <p class="step-desc">Define your automation sequence using our simple command format</p>
+            <div class="section download-section">
+                <h2>🚀 Download Now</h2>
+                <a href="https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow/TaskFlow.exe" class="download-btn primary">
+                    📥 Download for Windows
+                </a>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number">14</div>
+                        <div class="stat-label">Max Tasks</div>
                     </div>
-                    
-                    <div class="step">
-                        <div class="step-number">2</div>
-                        <h3 class="step-title">Configure Actions</h3>
-                        <p class="step-desc">Set up clicks, keystrokes, waits, and other actions with precise parameters</p>
-                    </div>
-                    
-                    <div class="step">
-                        <div class="step-number">3</div>
-                        <h3 class="step-title">Execute & Automate</h3>
-                        <p class="step-desc">Run your TaskGroups and watch as your repetitive tasks complete automatically</p>
+                    <div class="stat-item">
+                        <div class="stat-number">8</div>
+                        <div class="stat-label">Commands</div>
                     </div>
                 </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; margin: 15px 0; text-align: center;">
+                    <p style="margin-bottom: 10px; font-weight: bold;">🐧 Linux/Mac Users:</p>
+                    <p style="font-size: 0.9em;">Install Python 3.8+ and required packages:<br>
+                    <code style="background: rgba(0,0,0,0.3); padding: 5px; border-radius: 3px;">pip install pyautogui tkinter pymsgbox</code><br>
+                    Then run: <code style="background: rgba(0,0,0,0.3); padding: 5px; border-radius: 3px;">python main.py</code></p>
+                </div>
+                <a href="https://github.com/Vic-Nas/TaskFlow" class="download-btn">
+                    🔗 View Source Code
+                </a>
+                <a href="https://vic-nas.github.io/portfolio/" class="download-btn">
+                    👨‍💻 Developer Portfolio
+                </a>
+            </div>
 
-                <div class="code-example">
-<span class="code-comment"># Sample TaskGroup File</span>
-#My Daily Workflow
-#John Doe
-#ACTION  PARAMS  TIMES  Desc
+            <div class="section">
+                <h2>✨ Key Features</h2>
+                <ul class="feature-list">
+                    <li>Visual task automation with GUI</li>
+                    <li>Click detection with coordinate overlay</li>
+                    <li>Keyboard shortcuts & hotkeys</li>
+                    <li>File operations & execution</li>
+                    <li>Task groups with sharing</li>
+                    <li>Built-in feedback system</li>
+                    <li>Auto-update functionality</li>
+                    <li>Export & import task files</li>
+                </ul>
+                <a href="info.html" class="info-link">📚 View All Commands</a>
+            </div>
 
-LCLICK  100 200  1  Click login button
-TYPE  username password  1  Enter credentials  
-KEY  ctrl enter  1  Submit form
-WAIT  2  1  Wait for page load
-RCLICK  300 400  1  Right click menu
-KEY  ctrl c  1  Copy selection
-</div>
-
-                <p style="text-align: center; color: #666; margin-top: 30px;">
-                    <strong>Supported Actions:</strong> LCLICK, RCLICK, TYPE, KEY, WAIT, OPEN<br>
-                    Each action can be repeated multiple times and includes descriptive labels for easy management.
+            <div class="section">
+                <h2>🎯 Available Commands</h2>
+                <div class="command-grid">
+                    <div class="command-item">LCLICK</div>
+                    <div class="command-item">RCLICK</div>
+                    <div class="command-item">KEY</div>
+                    <div class="command-item">TYPE</div>
+                    <div class="command-item">WAIT</div>
+                    <div class="command-item">OPEN</div>
+                    <div class="command-item">EXEC</div>
+                    <div class="command-item">More...</div>
+                </div>
+                <p style="margin-top: 20px; text-align: center; color: #e0e0e0;">
+                    Create powerful automation workflows by combining these simple commands into task groups.
                 </p>
-            </section>
+            </div>
         </div>
 
-        <section class="download-section">
-            <h2 class="download-title">Get TaskFlow</h2>
-            <p class="download-subtitle">Choose your preferred installation method</p>
-            
-            <div class="download-options">
-                <div class="download-card windows-card">
-                    <div>
-                        <span class="os-icon">🪟</span>
-                        <h3 class="card-title">Windows Executable</h3>
-                        <p class="card-subtitle">Ready to Run</p>
-                        <p class="card-description">
-                            Pre-compiled executable for Windows 10/11. 
-                            Download and run immediately - no Python installation required.
-                        </p>
-                    </div>
-                    <a href="compiled/TaskFlow_Windows_Installer.exe" class="download-btn" download>
-                        Download .exe
-                    </a>
-                </div>
-                
-                <div class="download-card source-card">
-                    <div>
-                        <span class="os-icon">🐍</span>
-                        <h3 class="card-title">Python Source Code</h3>
-                        <p class="card-subtitle">All Platforms</p>
-                        <p class="card-description">
-                            Run from source code on Windows, macOS, or Linux. 
-                            Requires Python 3.7+ and pip installation of dependencies.
-                        </p>
-                    </div>
-                    <a href="https://github.com/Vic-Nas/TaskFlow" class="github-btn" target="_blank">
-                        View on GitHub
-                    </a>
-                </div>
-            </div>
-            
-            <div class="platforms-info">
-                <p><strong>📱 macOS & Linux Users:</strong></p>
-                <p>Clone the repository and run the Python source code:</p>
-                <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; margin: 15px 0; font-family: monospace; text-align: left;">
-                    git clone https://github.com/Vic-Nas/TaskFlow.git<br>
-                    cd TaskFlow<br>
-                    python taskflow.py
-                </div>
-                <p style="opacity: 0.8;">Full installation instructions and dependencies are available in the GitHub repository.</p>
-            </div>
-            
-            <p style="margin-top: 30px; opacity: 0.8;">
-                Free and open-source. Start automating immediately.
+        <div class="footer">
+            <p>
+                <a href="https://coff.ee/vicnas">☕ Buy me a coffee</a>
+                <a href="mailto:taskflow.vicnas@gmail.com">💌 Send Feedback</a>
+                <a href="https://vic-nas.github.io/portfolio/">🌐 Portfolio</a>
             </p>
-        </section>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 TaskFlow. Streamline your workflow, amplify your productivity.</p>
-            <p style="margin-top: 10px; opacity: 0.7;">
-                Built with ❤️ for automation enthusiasts everywhere
+            <p style="margin-top: 10px; color: #b0b0b0; font-size: 0.9em;">
+                Built with ❤️ by Vic-Nas | TaskFlow - Making automation accessible to everyone
             </p>
         </div>
-    </footer>
+    </div>
 
     <script>
-        // Add smooth scrolling for any internal links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
+        // Add some interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('.section');
+            
+            sections.forEach(section => {
+                section.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                });
+                
+                section.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
                 });
             });
-        });
 
-        // Add download tracking (optional)
-        document.querySelectorAll('.download-btn, .github-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                const type = this.classList.contains('github-btn') ? 'GitHub' : 'Windows Executable';
-                console.log(`Download/Link clicked: ${type}`);
-                
-                // You could add analytics tracking here
-                // gtag('event', 'download', { 'type': type });
+            // Add click animation to download button
+            const primaryBtn = document.querySelector('.download-btn.primary');
+            primaryBtn.addEventListener('click', function() {
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1.05)';
+                }, 150);
             });
-        });
-
-        // Add scroll animations
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver(function(entries) {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        // Animate feature cards on scroll
-        document.querySelectorAll('.feature-card, .step, .download-card').forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            observer.observe(el);
         });
     </script>
 </body>

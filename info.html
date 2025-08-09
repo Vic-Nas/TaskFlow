@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Command Reference</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .nav-logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #ffd700;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #ffd700;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+        }
+
+        .logo {
+            font-size: 3em;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.4em;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .command-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .command-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 215, 0, 0.5);
+        }
+
+        .command-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 10px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .command-description {
+            color: #ecf0f1;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .command-example {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            margin: 15px 0;
+        }
+
+        .command-example-title {
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 8px;
+        }
+
+        .command-syntax {
+            font-family: 'Courier New', monospace;
+            color: #2ecc71;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+
+        .usage-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .usage-section h2 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            font-size: 2em;
+            text-align: center;
+        }
+
+        .workflow-example {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #e74c3c;
+        }
+
+        .workflow-step {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            border-left: 3px solid #ffd700;
+        }
+
+        .tip-box {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tip-box h3 {
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 40px;
+        }
+
+        .footer a {
+            color: #ffd700;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: #ffed4e;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .commands-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo {
+                font-size: 2.5em;
+            }
+            
+            .subtitle {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="index.html" class="nav-logo">TaskFlow</a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="info.html">Commands</a>
+                <a href="https://github.com/Vic-Nas/TaskFlow">GitHub</a>
+                <a href="https://vic-nas.github.io/portfolio/">Portfolio</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="header">
+            <h1 class="logo">TaskFlow Commands</h1>
+            <p class="subtitle">Complete Reference Guide for Task Automation</p>
+        </div>
+
+        <div class="usage-section">
+            <h2>📋 Task File Format</h2>
+            <p>TaskFlow uses simple .task files with this structure:</p>
+            <div class="workflow-example">
+                <div class="workflow-step"><strong>#Task Group Title</strong></div>
+                <div class="workflow-step"><strong>#Author Email</strong></div>
+                <div class="workflow-step"><strong>#ACTION  PARAMS  TIMES  Description</strong></div>
+                <div class="workflow-step">LCLICK  500,300  1  Click login button</div>
+                <div class="workflow-step">TYPE  username123  1  Enter username</div>
+                <div class="workflow-step">WAIT  2  1  Wait for page load</div>
+            </div>
+            <div class="tip-box">
+                <h3>💡 Pro Tips</h3>
+                <p>• Use [SPACE] in parameters to represent actual spaces<br>
+                • Maximum 14 tasks per group, but you can chain groups with EXEC<br>
+                • Use the coordinate detector for precise clicking<br>
+                • Test individual tasks before running the full group</p>
+            </div>
+        </div>
+
+        <div class="commands-grid">
+            <div class="command-card">
+                <div class="command-name">LCLICK</div>
+                <div class="command-description">Performs a left mouse click at specified coordinates</div>
+                <div class="command-example">
+                    <div class="command-example-title">Syntax:</div>
+                    <div class="command-syntax">LCLICK  X,Y  times  description</div>
+                </div>
+                <div class="command-example">
+                    <div class="command-example-title">Example:</div>
+                    <div class="command-syntax">LCLICK  500,300  1  Click start button</div>
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-name">RCLICK</div>
+                <div class="command-description">Performs a right mouse click at specified coordinates</div>
+                <div class="command-example">
+                    <div class="command-example-title">Syntax:</div>
+                    <div class="command-syntax">RCLICK  X,Y  times  description</div>
+                </div>
+                <div class="command-example">
+                    <div class="command-example-title">Example:</div>
+                    <div class="command-syntax">RCLICK  200,150  1  Right-click context menu</div>
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-name">KEY</div>
+                <div class="command-description">Sends keyboard shortcuts and hotkey combinations</div>
+                <div class="command-example">
+                    <div class="command-example-title">Syntax:</div>
+                    <div class="command-syntax">KEY  key1,key2,key3  times  description</div>
+                </div>
+                <div class="command-example">
+                    <div class="command-example-title">Examples:</div>
+                    <div class="command-syntax">KEY  ctrl,c  1  Copy text</div><br>
+                    <div class="command-syntax">KEY  win,d  1  Show desktop</div><br>
+                    <div class="command-syntax">KEY  alt,tab  1  Switch window</div>
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-name">TYPE</div>
+                <div class="command-description">Types text as if typed on keyboard</div>
+                <div class="command-example">
+                    <div class="command-example-title">Syntax:</div>
+                    <div class="command-syntax">TYPE  text  times  description</div>
+                </div>
+                <div class="command-example">
+                    <div class="command-example-title">Examples:</div>
+                    <div class="command-syntax">TYPE  Hello[SPACE]World  1  Type greeting</div><br>
+                    <div class="command-syntax">TYPE  username@email.com  1  Enter email</div>
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-name">WAIT</div>
+                <div class="command-description">Pauses execution for specified seconds</div>
+                <div class="command-example">
+                    <div class="command-example-title">Syntax:</div>
+                    <div class="command-syntax">WAIT  seconds  times  description</div>
+                </div>
+                <div class="command-example">
+                    <div class="command-example-title">Examples:</div>
+                    <div class="command-syntax">WAIT  2.5  1  Wait for loading</div><br>
+                    <div class="command-syntax">WAIT  0.1  1  Brief pause</div>
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-name">OPEN</div>
+                <div class="command-description">Opens files, folders, or applications</div>
+                <div class="command-example">
+                    <div class="command-example-title">Syntax:</div>
+                    <div class="command-syntax">OPEN  filepath  times  description</div>
+                </div>
+                <div class="command-example">
+                    <div class="command-example-title">Examples:</div>
+                    <div class="command-syntax">OPEN  C:\document.txt  1  Open document</div><br>
+                    <div class="command-syntax">OPEN  notepad.exe  1  Launch Notepad</div>
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-name">EXEC</div>
+                <div class="command-description">Executes another TaskFlow task group file</div>
+                <div class="command-example">
+                    <div class="command-example-title">Syntax:</div>
+                    <div class="command-syntax">EXEC  taskfile.task  times  description</div>
+                </div>
+                <div class="command-example">
+                    <div class="command-example-title">Example:</div>
+                    <div class="command-syntax">EXEC  login_sequence.task  1  Run login tasks</div>
+                </div>
+                <p style="color: #e74c3c; margin-top: 10px; font-size: 0.9em;">
+                    <strong>Note:</strong> Use EXEC to chain task groups and bypass the 14-task limit
+                </p>
+            </div>
+
+            <div class="command-card">
+                <div class="command-name">More Commands</div>
+                <div class="command-description">TaskFlow supports additional automation commands and will continue to expand</div>
+                <div class="command-example">
+                    <div class="command-example-title">Features:</div>
+                    <p>• Mouse movement tracking<br>
+                    • Window management<br>
+                    • Image recognition (planned)<br>
+                    • Conditional logic (planned)</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="usage-section">
+            <h2>🔧 Usage Workflow</h2>
+            <div class="workflow-example">
+                <h3 style="color: #ffd700; margin-bottom: 15px;">Creating Your First Automation</h3>
+                <div class="workflow-step">1. <strong>Create New Group:</strong> Click "New Group" and name your task sequence</div>
+                <div class="workflow-step">2. <strong>Detect Coordinates:</strong> Use "Detect Coords" to find exact click positions</div>
+                <div class="workflow-step">3. <strong>Build Tasks:</strong> Add commands like LCLICK, TYPE, KEY in sequence</div>
+                <div class="workflow-step">4. <strong>Test Individual Tasks:</strong> Use "Run" button on each task to verify</div>
+                <div class="workflow-step">5. <strong>Run Full Group:</strong> Execute complete automation with "Run Group"</div>
+                <div class="workflow-step">6. <strong>Share & Export:</strong> Save your task file and share with others</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>
+                <a href="index.html">🏠 Home</a>
+                <a href="https://github.com/Vic-Nas/TaskFlow">📱 GitHub</a>
+                <a href="https://vic-nas.github.io/portfolio/">💼 Portfolio</a>
+                <a href="mailto:taskflow.vicnas@gmail.com">💌 Feedback</a>
+                <a href="https://coff.ee/vicnas">☕ Support</a>
+            </p>
+            <p style="margin-top: 15px; color: #95a5a6;">
+                TaskFlow Command Reference | Built with ❤️ by Vic-Nas
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Add smooth scrolling and interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.command-card');
+            
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                    this.style.borderColor = 'rgba(255, 215, 0, 0.8)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                    this.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                });
+            });
+
+            // Add click-to-copy functionality for syntax examples
+            const syntaxElements = document.querySelectorAll('.command-syntax');
+            syntaxElements.forEach(element => {
+                element.style.cursor = 'pointer';
+                element.title = 'Click to copy';
+                
+                element.addEventListener('click', function() {
+                    navigator.clipboard.writeText(this.textContent).then(() => {
+                        const original = this.style.background;
+                        this.style.background = 'rgba(46, 204, 113, 0.3)';
+                        setTimeout(() => {
+                            this.style.background = original;
+                        }, 500);
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

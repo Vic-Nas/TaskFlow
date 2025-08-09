@@ -4,7 +4,6 @@ import tkinter
 from imports.mail import sendVerifiMail
 from imports.utils import centerWin, alert
 
-from pymsgbox import alert
 from random import randbytes
 from pathlib import Path
 
@@ -61,7 +60,7 @@ def checkCode(code, win):
         alert("Wrong code.")
     else: 
         warning = "You may need to add to antivirus exclusion path\nas it moves the mouse."
-        alert(["You are logged in.", warning], title = "Info", titles = ["Note", "Warning"])
+        alert(["You are logged in.", warning], title = "Info", headings = ["Note", "Warning"])
         print("\tIt is.")
         setSetting("email", email)
         win.destroy()

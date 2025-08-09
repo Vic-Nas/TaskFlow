@@ -161,10 +161,7 @@ def main():
     taskGroups: list[TaskGroup] = []
 
     if not logged():
-        try:
-            login()
-        except Exception as e:
-            print("Login error:", e)
+        login()
         
     if not logged():
         alert("You must log in")
@@ -394,7 +391,7 @@ def main():
                 feedBackWindow.transient()
                 feedBackWindow.grab_set()
 
-                attachedFiles = []
+                attachedFiles = ["logs.txt"]
 
                 def selectFiles():
                     files = filedialog.askopenfilenames(title="Select files")

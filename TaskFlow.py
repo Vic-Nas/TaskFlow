@@ -86,5 +86,52 @@ else:
     message += "You'll have to manually redownload the src folder."
     alert(message)
 
+import traceback
+
+logFilePath = "logs.txt"
+maxRows = 1000
+
+class LogRedirector:
+    def __init__(self, filePath, maxLines):
+        self.filePath = filePath
+        self.maxLines = maxLines
+
+    def write(self, message):
+        if message.strip() == "":
+            return
+        lines = self.readLogLines()
+        lines.append(message)
+        if len(lines) > self.maxLines:
+            lines = lines[-self.maxLines:]
+        self.writeLogLines(lines)
+
+    def flush(self):
+        pass  # Needed for compatibility
+
+    def readLogLines(self):
+        try:
+            with open(self.filePath, "r") as f:
+                return f.readlines()
+        except FileNotFoundError:
+            return []
+
+    def writeLogLines(self, lines):
+        with open(self.filePath, "w") as f:
+            f.writelines(lines)
+
+def globalExceptionHandler(excType, excValue, excTraceback):
+    error = "".join(traceback.format_exception(excType, excValue, excTraceback))
+    with open(logFilePath, "a") as f:
+        f.write("\nException captured:\n")
+        f.write(error)
+    print("Exception logged, check logs.txt")
+
+sys.stdout = LogRedirector(logFilePath, maxRows)
+sys.stderr = LogRedirector(logFilePath, maxRows)
+sys.excepthook = globalExceptionHandler
+
 from src.main import main
-main()
+try:
+    main()
+except:
+    alert("Notify problem in the app with the feedback button.\nLog will be sent.")

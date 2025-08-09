@@ -64,13 +64,13 @@ def centerWin(window):
 
     window.geometry(f"{windowWidth}x{windowHeight}+{x}+{y}")
 
-def alert(content, titles = None, bg = "#222", fg = "#fff", windowTitle = "Info", sectionBg = "#333", sectionFg = "#0ff"):
+def alert(content, headings = None, bg = "#222", fg = "#fff", title = "Info", sectionBg = "#333", sectionFg = "#0ff"):
     # Create root but keep it hidden
     root = tk.Tk()
     root.withdraw()
     
     win = tk.Toplevel(root)
-    win.title(windowTitle)
+    win.title(title)
     win.configure(bg = bg)
     win.resizable(False, False)
     
@@ -81,8 +81,8 @@ def alert(content, titles = None, bg = "#222", fg = "#fff", windowTitle = "Info"
         tk.Label(win, text = content, bg = bg, fg = fg, font = textFont, justify = "left", wraplength = 400).pack(padx = 20, pady = 20)
     elif isinstance(content, list):
         for i, txt in enumerate(content):
-            if titles and i < len(titles):
-                secTitle = titles[i]
+            if headings and i < len(headings):
+                secTitle = headings[i]
             else:
                 secTitle = f"Section {i + 1}:"
             

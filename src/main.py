@@ -67,7 +67,7 @@ def updateWindows():
     newDetails = getSetting("new")
     fixes = "\n".join(newDetails["fix"])
     added = "\n".join(newDetails["add"])
-    alert([f"{fixes}", f"{added}"], windowTitle = "Confirm update:", titles = ["Fixes", "Added"])
+    alert([f"{fixes}", f"{added}"], title = "Confirm update:", headings = ["Fixes", "Added"])
     
     tempDir = os.path.abspath("tempUpdate")
     backupDir = os.path.abspath("backup")

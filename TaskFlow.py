@@ -6,17 +6,17 @@ import platform
 from imports.utils import alert
 
 def minimizeConsole():
-    """Minimize or hide console window depending on OS"""
+    """Minimize only the console window on Windows, detach on Linux/macOS"""
     system = platform.system()
     if system == "Windows":
         import ctypes
-        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
-        if hwnd:
-            # 6 = minimize, 0 = hide completely
-            ctypes.windll.user32.ShowWindow(hwnd, 6)  
+        kernel32 = ctypes.windll.kernel32
+        user32 = ctypes.windll.user32
+        hwnd = kernel32.GetConsoleWindow()
+        if hwnd != 0:
+            # 6 = SW_MINIMIZE, affects only the console window
+            user32.ShowWindow(hwnd, 6)
     else:
-        # On Linux/macOS, cannot programmatically minimize most terminals
-        # Best option: detach from terminal
         try:
             if sys.stdin and sys.stdin.isatty():
                 sys.stdin.close()
@@ -26,6 +26,7 @@ def minimizeConsole():
                 sys.stderr.close()
         except Exception:
             pass
+
 
 def ensureAdminScript():
     """Elevation when running as .py script"""

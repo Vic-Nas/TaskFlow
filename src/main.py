@@ -4,7 +4,7 @@ from imports.utils import centerWin
 import webbrowser
 from pathlib import Path
 from imports.automate.TaskDef import TaskGroup, matchAction, Task
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 from shutil import copy, copy2
 from imports.automate.detectCoords import SimpleCircleOverlay
 
@@ -30,8 +30,6 @@ def single_instance(port=65432):
 lock_socket = single_instance()
 
 def updateWindows():
-    import tkinter as tk
-    import tkinter.ttk as ttk
     import urllib.request
     import json
     
@@ -380,28 +378,45 @@ def main():
                     else:
                         task["commandVar"].set("WAIT")
                         task["commandMenu"].configure(text="WAIT")
-
+                        
             case "FeedBack":
                 if feedBackWindow:
                     feedBackWindow.destroy()
-
                 feedBackWindow = tkinter.Toplevel()
                 feedBackWindow.title("Send Feedback")
-                feedBackWindow.geometry("400x350")
+                feedBackWindow.geometry("420x380")
                 centerWin(feedBackWindow)
                 feedBackWindow.transient()
                 feedBackWindow.grab_set()
-
+                feedBackWindow.configure(bg="#1e1e2f")
                 attachedFiles = []
-
-                def selectFiles(files = None):
+                
+                def selectFiles(files=None):
                     if not files:
                         files = filedialog.askopenfilenames(title="Select files")
                     if files:
                         newFiles = [f for f in files if f not in attachedFiles]
                         attachedFiles.extend(newFiles)
-                        fileListVar.set("\n".join([f.split("/")[-1] for f in attachedFiles]))
-
+                        updateFileList()
+                
+                def updateFileList():
+                    fileListBox.delete(0, "end")
+                    if not attachedFiles:
+                        fileListBox.insert("end", "No files selected")
+                    else:
+                        for f in attachedFiles:
+                            fileListBox.insert("end", f.split("/")[-1])
+                
+                def onDoubleClick(event):
+                    selection = fileListBox.curselection()
+                    if selection and attachedFiles:  # Make sure there are actual files
+                        index = selection[0]
+                        if index < len(attachedFiles):  # Ensure index is valid
+                            # Remove the file from attachedFiles list
+                            removedFile = attachedFiles.pop(index)
+                            print(f"Removed file: {removedFile}")  # Optional: for debugging
+                            updateFileList()
+                
                 def send():
                     text = textBox.get("1.0", "end").strip()
                     if not text:
@@ -413,21 +428,65 @@ def main():
                         feedBackWindow.destroy()
                     except Exception as e:
                         messagebox.showerror("Error", f"Failed to send feedback:\n{e}")
-
-                textBox = tkinter.Text(feedBackWindow, height=8, wrap="word")
-                textBox.pack(padx=10, pady=(10, 5), fill="x")
-
-                selectBtn = tkinter.Button(feedBackWindow, text="Add files", command=selectFiles)
-                selectBtn.pack(padx=10, pady=(5, 2))
-
-                fileListVar = tkinter.StringVar(value="No files selected")
-                fileLabel = tkinter.Label(feedBackWindow, textvariable=fileListVar, anchor="w", justify="left")
-                fileLabel.pack(padx=10, pady=(0, 5), fill="x")
-
-                sendBtn = tkinter.Button(feedBackWindow, text="Send", command=send)
-                sendBtn.pack(padx=10, pady=10)
                 
-                selectFiles("logs.txt")
+                # Header
+                header = tkinter.Label(feedBackWindow, text = "📢 Send us your feedback",
+                                    bg = "#2d2d44", fg = "white", font = ("Segoe UI", 14, "bold"),
+                                    pady = 10)
+                header.pack(fill = "x")
+                
+                # Main content frame
+                content_frame = tkinter.Frame(feedBackWindow, bg = "#1e1e2f")
+                content_frame.pack(fill = "x", padx = 15, pady = (10, 0))
+                
+                # Feedback text
+                textBox = tkinter.Text(content_frame, height = 5, wrap = "word",
+                                    bg = "#f0f0f0", fg = "#000000",
+                                    relief = "flat", highlightthickness = 1, highlightbackground = "#4cc9f0")
+                textBox.pack(fill = "x", pady = (0, 8))
+                
+                # Add files button
+                selectBtn = tkinter.Button(content_frame, text = "📎 Add files", command = selectFiles,
+                                        bg = "#4cc9f0", fg = "white", activebackground = "#3bb0d8",
+                                        relief = "flat", font = ("Segoe UI", 10, "bold"))
+                selectBtn.pack(fill = "x", pady = (0, 5))
+                
+                # Helper text
+                helpText = tkinter.Label(content_frame, text = "Double-click a file to remove it",
+                                        bg = "#1e1e2f", fg = "#888888", font = ("Segoe UI", 9))
+                helpText.pack(anchor = "w", pady = (0, 3))
+                
+                # Scrollable file list with fixed height
+                fileFrame = tkinter.Frame(content_frame, bg = "#1e1e2f", height = 120)
+                fileFrame.pack(fill = "x", pady = (0, 8))
+                fileFrame.pack_propagate(False)
+                
+                fileScroll = tkinter.Scrollbar(fileFrame, orient = "vertical")
+                fileScroll.pack(side = "right", fill = "y")
+                
+                fileListBox = tkinter.Listbox(fileFrame, yscrollcommand = fileScroll.set,
+                                            bg = "white", fg = "black", relief = "flat",
+                                            selectbackground = "#4cc9f0", activestyle = "none")
+                fileListBox.pack(side = "left", fill = "both", expand = True)
+                fileScroll.config(command = fileListBox.yview)
+                
+                # Bind double-click event to the listbox
+                fileListBox.bind("<Double-Button-1>", onDoubleClick)
+                
+                # Fixed bottom button frame
+                bottom_frame = tkinter.Frame(feedBackWindow, bg = "#1e1e2f")
+                bottom_frame.pack(fill = "x", pady = 10)
+                
+                sendBtn = tkinter.Button(bottom_frame, text = "📤 Send Feedback", command = send,
+                                        bg = "#72efdd", fg = "#000", activebackground = "#56d8c9",
+                                        relief = "flat", font = ("Segoe UI", 11, "bold"))
+                sendBtn.pack(fill = "x", padx = 15)
+                
+                updateFileList()
+                selectFiles(("logs.txt",))
+                centerWin(feedBackWindow)
+
+
 
             case default:
                 print(color(buttonText, "red"), "clicked.")

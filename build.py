@@ -15,7 +15,7 @@ from pathlib import Path
 PROJECT_NAME = "TaskFlow"
 MAIN_SCRIPT = "TaskFlow.py"
 BUILD_DIR = "build"
-ICON_PATH = Path("data")/"VN.ico"
+ICON_PATH = Path("data")/"logo.ico"
 DIST_DIR = os.path.join(BUILD_DIR, "dist")
 WORK_DIR = os.path.join(BUILD_DIR, "build")
 

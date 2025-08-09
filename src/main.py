@@ -171,7 +171,7 @@ def main():
     root = tkinter.Tk()
     root.geometry("1200x800")
     root.resizable(False, False)
-    root.iconbitmap(Path("data")/"logo.ico")
+    root.iconbitmap(Path("data")/"VN.ico")
     root.title("TaskFlow")
 
 

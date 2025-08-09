@@ -32,7 +32,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['C:\\Users\\nasci\\Desktop\\Code\\Github\\TaskFlow\\data\\VN.ico'],
+    icon=['C:\\Users\\nasci\\Desktop\\Code\\Github\\TaskFlow\\data\\logo.ico'],
 )
 coll = COLLECT(
     exe,

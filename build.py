@@ -131,6 +131,8 @@ def build_pyinstaller_command():
         f"--workpath={WORK_DIR}",
         f"--specpath={BUILD_DIR}",
         f"--name={PROJECT_NAME}",
+        "--collect-all", "python3",  # add this line if supported by your PyInstaller version
+
     ]
     
     # Add icon if it exists (use absolute path)

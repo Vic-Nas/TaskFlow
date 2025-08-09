@@ -1,7 +1,7 @@
 {
     "email": "olagnascimento@gmail.com",
     "coloredLogs": false,
-    "version": 14,
+    "version": 15,
     "new": {
         "fix": [
             "Error in attachements display."

@@ -1,12 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_all
+
+datas = []
+binaries = []
+hiddenimports = ['tkinter', 'tkinter.ttk', 'tkinter.messagebox', 'tkinter.filedialog', 'tkinter.simpledialog', 'json', 'csv', 'sqlite3', 'datetime', 'pathlib', 'threading', 'queue', 'functools', 'itertools', 'collections', 'os', 'sys', 'shutil', 'subprocess', 'importlib', 'importlib.util', 'types']
+tmp_ret = collect_all('python3')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
     ['C:\\Users\\nasci\\Desktop\\Code\\Github\\TaskFlow\\TaskFlow.py'],
     pathex=[],
-    binaries=[],
-    datas=[],
-    hiddenimports=['tkinter', 'tkinter.ttk', 'tkinter.messagebox', 'tkinter.filedialog', 'tkinter.simpledialog', 'json', 'csv', 'sqlite3', 'datetime', 'pathlib', 'threading', 'queue', 'functools', 'itertools', 'collections', 'os', 'sys', 'shutil', 'subprocess', 'importlib', 'importlib.util', 'types'],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

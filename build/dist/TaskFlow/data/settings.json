@@ -1,5 +1,14 @@
 {
     "email": "",
     "coloredLogs": true,
-    "version": 5
+    "version": 6,
+    "new": {
+        "fix": [
+            "Wrong alert display."
+        ],
+        "add": [
+            "Add notices of fixes and added tools.",
+            "Minimize console when executing with python"
+        ]
+    }
 }

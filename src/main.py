@@ -8,7 +8,8 @@ from tkinter import filedialog, messagebox
 from shutil import copy, copy2
 from imports.automate.detectCoords import SimpleCircleOverlay
 
-from pymsgbox import prompt, alert
+from pymsgbox import prompt
+from imports.utils import alert
 import tkinter, sys, pyautogui, subprocess, os, socket
 from imports.mail import sendFeedBackMail
 
@@ -63,7 +64,10 @@ def updateWindows():
     except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, Exception):
         return
     
-    alert("Comfirm update")
+    newDetails = getSetting("new")
+    fixes = "\n".join(newDetails["fix"])
+    added = "\n".join(newDetails["add"])
+    alert([f"{fixes}", f"{added}"], windowTitle = "Confirm update:", titles = ["Fixes", "Added"])
     
     tempDir = os.path.abspath("tempUpdate")
     backupDir = os.path.abspath("backup")

@@ -35,6 +35,7 @@ def updateWindows():
     import urllib.request
     import json
     
+    newDetails = {}
     try:
         # Get local version
         localVersion = getSetting("version")
@@ -46,6 +47,7 @@ def updateWindows():
             repoSettings = json.loads(response.read().decode('utf-8'))
         
         repoVersion = repoSettings.get("version")
+        newDetails = repoSettings.get("new")
         
         # Ensure repoVersion is an integer
         if repoVersion is None:
@@ -64,7 +66,6 @@ def updateWindows():
     except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, Exception):
         return
     
-    newDetails = getSetting("new")
     fixes = "\n".join(newDetails["fix"])
     added = "\n".join(newDetails["add"])
     alert([f"{fixes}", f"{added}"], title = "Confirm update:", headings = ["Fixes", "Added"])

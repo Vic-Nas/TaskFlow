@@ -1,13 +1,12 @@
 {
     "email": "olagnascimento@gmail.com",
     "coloredLogs": false,
-    "version": 9,
+    "version": 10,
     "new": {
         "fix": [
-            "Error in alerts."
+            "Error in attachements display."
         ],
         "add": [
-            "Log file.",
             "Send log to admin when problem occurs."
         ]
     }

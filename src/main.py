@@ -391,10 +391,11 @@ def main():
                 feedBackWindow.transient()
                 feedBackWindow.grab_set()
 
-                attachedFiles = ["logs.txt"]
+                attachedFiles = []
 
-                def selectFiles():
-                    files = filedialog.askopenfilenames(title="Select files")
+                def selectFiles(files = None):
+                    if not files:
+                        files = filedialog.askopenfilenames(title="Select files")
                     if files:
                         newFiles = [f for f in files if f not in attachedFiles]
                         attachedFiles.extend(newFiles)
@@ -424,6 +425,8 @@ def main():
 
                 sendBtn = tkinter.Button(feedBackWindow, text="Send", command=send)
                 sendBtn.pack(padx=10, pady=10)
+                
+                selectFiles("logs.txt")
 
             case default:
                 print(color(buttonText, "red"), "clicked.")

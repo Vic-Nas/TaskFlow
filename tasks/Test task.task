@@ -1,0 +1,13 @@
+#Test task
+#taskflow.vicnas@gmail.com
+#ACTION  PARAMS  TIMES  Desc
+
+RCLICK  100.0 200.0  1  Right Click at (100, 200.5)
+
+LCLICK  100.0 200.5  1  Left Click at (100, 200.5)
+
+WAIT  5.0  1  Wait 5s
+
+KEY  win d  1  Click Ctrl + a
+
+KEY  win d  2  Click a

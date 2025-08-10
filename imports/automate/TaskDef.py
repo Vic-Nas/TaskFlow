@@ -122,7 +122,7 @@ class Task:
 
             
 class TaskGroup:
-    def __init__(self, filePath = "", author = "", title = "", maxTasks = 14):
+    def __init__(self, filePath = "", author = "", title = "", maxTasks = 1000):
         self.tasks: list[Task] = []
         self.author: str = author
         self.title: str = title

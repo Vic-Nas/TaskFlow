@@ -1,12 +1,1 @@
-Verification email sent to olagnascimento@gmail.comCheck if 986850 is the code sent.Exception in Tkinter callbackTraceback (most recent call last):
-  File "C:\Users\nasci\AppData\Local\Programs\Python\Python313\Lib\tkinter\__init__.py", line 2068, in __call__
-    return self.func(*args)
-           ~~~~~~~~~^^^^^^^
-  File "C:\Users\nasci\Desktop\Code\Github\TaskFlow\imports\settings.py", line 131, in <lambda>
-    command = lambda: checkCode(codeEntry.get(), loginWin),
-                      ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\nasci\Desktop\Code\Github\TaskFlow\imports\settings.py", line 64, in checkCode
-    alert(["You are logged in.", warning], title = "Info", headings = ["Note", "Warning"])
-    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: alert() got an unexpected keyword argument 'headings'
-Verification email sent to olagnascimento@gmail.comCheck if 040790 is the code sent.	It is.DisplayingTest taskDisplayingTest taskRemoved file: C:/Users/nasci/Documents/statement.pdfRemoved file: C:/Users/nasci/Documents/SSR_TSRPT_4.pdfRemoved file: C:/Users/nasci/Documents/Procédures Formulaire INS_Inscription_ANG2022-2023_2.pdfRemoved file: C:/Users/nasci/Documents/Procédures Formulaire INS_Inscription_ANG2022-2023.pdfRemoved file: C:/Users/nasci/Documents/sfbilliv_9037560.pdfRemoved file: logs.txtRemoved file: C:/Users/nasci/Documents/NASCIMENTO_Victorio_20299568.pdfRemoved file: C:/Users/nasci/Documents/Chapitre 6 Intégrales doubles.pdfRemoved file: C:/Users/nasci/Documents/MAT1400-A23-Cours9b-cours10(6.3-6.4).pdfRemoved file: logs.txtFeedback email from olagnascimento@gmail.com sent successfully.DisplayingTest taskDisplayingTest task
+[Errno 2] No such file or directory: ''[Errno 2] No such file or directory: ''[Errno 2] No such file or directory: ''

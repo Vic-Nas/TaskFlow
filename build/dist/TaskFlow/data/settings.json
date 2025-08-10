@@ -1,14 +1,17 @@
 {
-    "email": "olagnascimento@gmail.com",
+    "email": "@",
     "coloredLogs": false,
-    "version": 15,
+    "version": 16,
     "new": {
         "fix": [
-            "Error in attachements display."
+            "Resize logine logo(Was too big).",
+            "Groups size limited to 14."
         ],
         "add": [
-            "Change icon.",
-            "Nicer design for Feedback window."
+            "Rename Test task file.",
+            "Rename and delete groups.",
+            "Look for a group.",
+            "Track modified task."
         ]
     }
 }

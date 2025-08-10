@@ -78,7 +78,7 @@ if not fileName.lower().endswith('.py'):
     ensureAdminExecutable()
     try:
         updateName = "update" + platform.system()
-        exec(f"from src.main import {updateName};{updateName}()")
+        exec(f"from imports.utils import {updateName};{updateName}()")
     except Exception as e:
         alert(f"Update unavailable:\n{e}")
 else:
@@ -111,18 +111,18 @@ class LogRedirector:
 
     def readLogLines(self):
         try:
-            with open(self.filePath, "r") as f:
+            with open(self.filePath, mode = "r", encoding='utf-8') as f:
                 return f.readlines()
         except FileNotFoundError:
             return []
 
     def writeLogLines(self, lines):
-        with open(self.filePath, "w") as f:
+        with open(self.filePath, mode = "w", encoding='utf-8') as f:
             f.writelines(lines)
 
 def globalExceptionHandler(excType, excValue, excTraceback):
     error = "".join(traceback.format_exception(excType, excValue, excTraceback))
-    with open(logFilePath, "a") as f:
+    with open(logFilePath, mode = "a", encoding='utf-8') as f:
         f.write("\nException captured:\n")
         f.write(error)
     print("Exception logged, check logs.txt")
@@ -131,8 +131,9 @@ sys.stdout = LogRedirector(logFilePath, maxRows)
 sys.stderr = LogRedirector(logFilePath, maxRows)
 sys.excepthook = globalExceptionHandler
 
-from src.main import main
 try:
-    main()
+    from src.main import sendFeedBackMail, getSetting
 except:
-    alert("Notify problem in the app with the feedback button.\nLog will be sent.")
+    traceback.print_exc()
+    alert("Critical problem in the app.\nLog will be sent.")
+    sendFeedBackMail(getSetting("email"), "Critical problem", "logs.txt")

@@ -1,47 +1,139 @@
 
-import tkinter as tk
+import tkinter, os, sys, subprocess
 from tkinter import font as tkfont
+from json import load, dump
+from pathlib import Path
 
 
-def centerWin(window):
-    """
-    Centers a tkinter window on the screen.
-    
-    Args:
-        window: The Tk() or Toplevel() object to center
-    """
-    # Update the window to ensure dimensions are calculated
-    window.update_idletasks()
-    
-    # Get window dimensions
-    window_width = window.winfo_width()
-    window_height = window.winfo_height()
-    
-    # If dimensions are 1x1 (not yet configured), use requested geometry
-    if window_width <= 1 or window_height <= 1:
-        # Parse current geometry (e.g., "500x400+0+0")
-        geometry = window.geometry()
-        if 'x' in geometry and '+' in geometry:
-            size_part = geometry.split('+')[0]
-            window_width, window_height = map(int, size_part.split('x'))
-        else:
-            # Default values if parsing fails
-            window_width, window_height = 300, 200
-    
-    # Get screen dimensions
-    screen_width = window.winfo_screenwidth()
-    screen_height = window.winfo_screenheight()
-    
-    # Calculate position to center
-    x = (screen_width - window_width) // 2
-    y = (screen_height - window_height) // 2
-    
-    # Apply new position
-    window.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
+def setSetting(key, val):
+    with open(Path("data")/"settings.json") as file:
+        setting = load(file)
+    setting[key] = val
+    with open(Path("data")/"settings.json", "w") as file:
+        dump(setting, file, indent = 4)
 
-import tkinter as tk
-from tkinter import font as tkfont
+def getSetting(key):
+    with open(Path("data")/"settings.json") as file:
+        return load(file)[key]
+
+def updateWindows():
+    import urllib.request
+    import json
+    
+    newDetails = {}
+    try:
+        # Get local version
+        localVersion = getSetting("version")
+        
+        # Get repository version
+        repoUrl = "https://raw.githubusercontent.com/Vic-Nas/TaskFlow/main/data/settings.json"
+        
+        with urllib.request.urlopen(repoUrl, timeout=10) as response:
+            repoSettings = json.loads(response.read().decode('utf-8'))
+        
+        repoVersion = repoSettings.get("version")
+        newDetails = repoSettings.get("new")
+        
+        # Ensure repoVersion is an integer
+        if repoVersion is None:
+            return
+        
+        try:
+            repoVersion = int(repoVersion)
+        except (ValueError, TypeError):
+            return
+        
+        # Check if update is needed
+        if localVersion == repoVersion:
+            alert("Up to date.")
+            return
+        
+    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, Exception):
+        return
+    
+    fixes = "\n".join(newDetails["fix"])
+    added = "\n".join(newDetails["add"])
+    alert([f"{fixes}", f"{added}"], title = "Confirm update:", headings = ["Fixes", "Added"])
+    
+    tempDir = os.path.abspath("tempUpdate")
+    backupDir = os.path.abspath("backup")
+    
+    # Get the actual executable path (works for both .py and .exe)
+    if getattr(sys, 'frozen', False):
+        # Running as compiled exe
+        currentExePath = sys.executable
+        appDir = os.path.dirname(currentExePath)
+    else:
+        # Running as python script
+        currentExePath = os.path.abspath(sys.argv[0])
+        appDir = os.path.dirname(currentExePath)
+    
+    exeName = os.path.basename(currentExePath)
+    
+    # Create temp and backup dirs
+    os.makedirs(tempDir, exist_ok=True)
+    os.makedirs(backupDir, exist_ok=True)
+    
+    # Create batch script FIRST, then update version after successful download
+    batScript = f"""@echo off
+echo Update started - Local version: {localVersion}, Repository version: {repoVersion} > update.log
+
+echo Creating backup... >> update.log
+copy "{currentExePath}" "{backupDir}\\{exeName}.bak" >> update.log 2>&1
+if errorlevel 1 (
+    echo Backup failed, aborting update >> update.log
+    goto :cleanup
+)
+
+echo Downloading TaskFlow.exe... >> update.log
+powershell -WindowStyle Hidden -Command "try {{ Invoke-WebRequest -Uri 'https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow/TaskFlow.exe' -OutFile '{tempDir}\\TaskFlow.exe' -TimeoutSec 30 }} catch {{ exit 1 }}" >> update.log 2>&1
+if errorlevel 1 (
+    echo Download failed >> update.log
+    goto :cleanup
+)
+
+echo Waiting for app to close... >> update.log
+timeout /t 3 /nobreak > nul
+
+echo Installing update... >> update.log
+copy /y "{tempDir}\\TaskFlow.exe" "{currentExePath}" >> update.log 2>&1
+if errorlevel 1 (
+    echo Installation failed, restoring backup >> update.log
+    copy /y "{backupDir}\\{exeName}.bak" "{currentExePath}" >> update.log 2>&1
+    goto :cleanup
+)
+
+echo Update successful, starting application... >> update.log
+start "" "{currentExePath}"
+
+:cleanup
+echo Cleaning up... >> update.log
+if exist "{tempDir}" rmdir /s /q "{tempDir}" >> update.log 2>&1
+echo Update finished >> update.log
+del "%~0"
+"""
+    
+    batPath = os.path.join(os.path.dirname(currentExePath), "update.bat")
+    
+    with open(batPath, "w") as batFile:
+        batFile.write(batScript)
+    
+    # Update version only AFTER successful batch creation
+    # The new version will update its own settings when it starts
+    try:
+        # Only update if we got this far successfully
+        setSetting("version", repoVersion)
+    except:
+        # If setting fails, don't abort the update
+        pass
+    
+    # Launch batch silently and exit current process
+    subprocess.Popen([batPath], cwd=os.path.dirname(currentExePath), creationflags=subprocess.CREATE_NO_WINDOW)
+    
+    # Exit current process to avoid relaunch loop
+    sys.exit(0)
+    
 
 def centerWin(window):
     window.update_idletasks()
@@ -66,10 +158,10 @@ def centerWin(window):
 
 def alert(content, headings = None, bg = "#222", fg = "#fff", title = "Info", sectionBg = "#333", sectionFg = "#0ff"):
     # Create root but keep it hidden
-    root = tk.Tk()
+    root = tkinter.Tk()
     root.withdraw()
     
-    win = tk.Toplevel(root)
+    win = tkinter.Toplevel(root)
     win.title(title)
     win.configure(bg = bg)
     win.resizable(False, False)
@@ -78,7 +170,7 @@ def alert(content, headings = None, bg = "#222", fg = "#fff", title = "Info", se
     textFont = tkfont.Font(family = "Helvetica", size = 10)
 
     if isinstance(content, str):
-        tk.Label(win, text = content, bg = bg, fg = fg, font = textFont, justify = "left", wraplength = 400).pack(padx = 20, pady = 20)
+        tkinter.Label(win, text = content, bg = bg, fg = fg, font = textFont, justify = "left", wraplength = 400).pack(padx = 20, pady = 20)
     elif isinstance(content, list):
         for i, txt in enumerate(content):
             if headings and i < len(headings):
@@ -86,8 +178,8 @@ def alert(content, headings = None, bg = "#222", fg = "#fff", title = "Info", se
             else:
                 secTitle = f"Section {i + 1}:"
             
-            tk.Label(win, text = secTitle, bg = sectionBg, fg = sectionFg, font = sectionFont, anchor = "w").pack(fill = "x", padx = 10, pady = (10, 0))
-            tk.Label(win, text = txt, bg = bg, fg = fg, font = textFont, justify = "left", wraplength = 400).pack(padx = 20, pady = 5)
+            tkinter.Label(win, text = secTitle, bg = sectionBg, fg = sectionFg, font = sectionFont, anchor = "w").pack(fill = "x", padx = 10, pady = (10, 0))
+            tkinter.Label(win, text = txt, bg = bg, fg = fg, font = textFont, justify = "left", wraplength = 400).pack(padx = 20, pady = 5)
     else:
         raise TypeError("content must be a string or a list of strings")
     
@@ -95,12 +187,12 @@ def alert(content, headings = None, bg = "#222", fg = "#fff", title = "Info", se
         win.destroy()
         root.quit()  # ⬅ force sortie de mainloop
     
-    okButton = tk.Button(win, text = "OK", command = closeWin, bg = "#555", fg = "#fff", activebackground = "#777", relief = "flat")
+    okButton = tkinter.Button(win, text = "OK", command = closeWin, bg = "#555", fg = "#fff", activebackground = "#777", relief = "flat")
     okButton.pack(pady = 10)
 
     win.bind("<Return>", closeWin)  # ⬅ Enter valide aussi
     
     centerWin(win)
     win.grab_set()
-    root.mainloop()  # mainloop sur root, pas sur win
-    root.destroy()   # nettoie complètement
+    root.mainloop() 
+    root.destroy() 

@@ -10,6 +10,13 @@ from pathlib import Path
 
 email = ""
 
+def setSetting(key, val):
+    with open(Path("data")/"settings.json") as file:
+        setting = load(file)
+    setting[key] = val
+    with open(Path("data")/"settings.json", "w") as file:
+        dump(setting, file, indent = 4)
+
 def getSetting(key):
     with open(Path("data")/"settings.json") as file:
         return load(file)[key]
@@ -34,12 +41,7 @@ def color(text, colorName):
         return f"{colorCodes[colorName]}{text}{colorCodes['reset']}"
     return text
 
-def setSetting(key, val):
-    with open(Path("data")/"settings.json") as file:
-        setting = load(file)
-    setting[key] = val
-    with open(Path("data")/"settings.json", "w") as file:
-        dump(setting, file, indent = 4)
+
 
 
 def logoGen(width, height):
@@ -84,7 +86,7 @@ def login():
     centerWin(loginWin)
     
     
-    logo = logoGen(200, 200)    
+    logo = logoGen(100, 100)    
     logoLabel = tkinter.Label(loginWin, height = 100, image = logo)
     # logoLabel.image = logo
     logoLabel.pack()

@@ -1,16 +1,16 @@
 
-from imports.settings import logged, login, color, getSetting, setSetting
+from imports.settings import logged, login, color, getSetting
 from imports.utils import centerWin
 import webbrowser, traceback
 from pathlib import Path
 from imports.automate.TaskDef import TaskGroup, matchAction, Task
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox
 from shutil import copy, copy2
 from imports.automate.detectCoords import SimpleCircleOverlay
 
 from pymsgbox import prompt
 from imports.utils import alert
-import tkinter, sys, pyautogui, subprocess, os, socket
+import tkinter, sys, pyautogui, os, socket
 from imports.mail import sendFeedBackMail
 
 overlay = None

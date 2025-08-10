@@ -965,16 +965,6 @@ def displaySelected(leftUp = 0, leftDown = 0):
         
 
 
-import atexit
-
-def cleanup():
-    if 'lock_socket' in globals():
-        try:
-            lock_socket.close()
-        except:
-            pass
-
-atexit.register(cleanup)
 
 # FIX 3: Better search handling
 def on_search_change(*args):

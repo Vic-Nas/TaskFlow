@@ -19,12 +19,20 @@ def openFile(path):
 import tkinter as tk
 import time
 
+import tkinter as tk
+import time
+
 def wait(seconds, display = True, color = "red", size = 120):
     """Visual countdown with big floating numbers"""
     
     if not display:
         time.sleep(seconds)
         return
+    
+    # Handle float seconds
+    isFloat = isinstance(seconds, float)
+    totalSeconds = seconds
+    wholeSeconds = int(seconds)
     
     rootWindow = tk.Tk()
     rootWindow.overrideredirect(True)  # Remove window decorations
@@ -55,34 +63,21 @@ def wait(seconds, display = True, color = "red", size = 120):
     numberLabel.pack(expand = True)
     
     # Display countdown
-    for currentNumber in range(seconds, 0, -1):
-        numberLabel.config(text = str(currentNumber))
-        rootWindow.update()
-        time.sleep(1)
+    if wholeSeconds > 0:
+        for currentNumber in range(wholeSeconds, 0, -1):
+            numberLabel.config(text = str(currentNumber))
+            rootWindow.update()
+            time.sleep(1)
+    
+    # Handle remaining decimal part
+    if isFloat:
+        remainingTime = totalSeconds - wholeSeconds
+        if remainingTime > 0:
+            time.sleep(remainingTime)
     
     # Close automatically
     rootWindow.destroy()
 
-# Usage examples:
-# wait(3)  # Default: red, size 120, display=True
-# wait(5, display=False)  # Just sleep without display
-# wait(3, color="yellow", size=150)  # Yellow, bigger
-# wait(2, display=True, color="white", size=80)  # White, smallerg='black')  # Noir = transparent
-    
-    label = tk.Label(rootWindow, font=("Arial", 80, "bold"), fg="red", bg="black")
-    label.pack(expand=True)
-    
-    for i in range(seconds, 0, -1):
-        label.config(text=str(i))
-        rootWindow.update()
-        time.sleep(1)
-    
-    rootWindow.destroy()
-
-# Usage - remplacez votre time.wait(3) par :
-# countdown_big(3)
-# ou
-# quick_countdown(3)
 
 
 matchAction.update({

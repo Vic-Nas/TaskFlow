@@ -1,6 +1,6 @@
 
 
-import pyautogui, time
+import pyautogui
 from collections import defaultdict
 
 matchAction = defaultdict(lambda *args: None)
@@ -14,12 +14,81 @@ def openFile(path):
         subprocess.run(['open', path])
     else:
         subprocess.run(['xdg-open', path])
+        
+        
+import tkinter as tk
+import time
+
+def wait(seconds, display = True, color = "red", size = 120):
+    """Visual countdown with big floating numbers"""
+    
+    if not display:
+        time.sleep(seconds)
+        return
+    
+    rootWindow = tk.Tk()
+    rootWindow.overrideredirect(True)  # Remove window decorations
+    rootWindow.attributes('-topmost', True)  # Always visible
+    rootWindow.attributes('-transparentcolor', 'black')  # Make black transparent
+    
+    # Window size adapted to font size
+    windowWidth = int(size * 3.5)
+    windowHeight = int(size * 2.5)
+    rootWindow.geometry(f"{windowWidth}x{windowHeight}")
+    
+    # Center window on screen
+    screenWidth = rootWindow.winfo_screenwidth()
+    screenHeight = rootWindow.winfo_screenheight()
+    posX = (screenWidth - windowWidth) // 2
+    posY = (screenHeight - windowHeight) // 2
+    rootWindow.geometry(f"{windowWidth}x{windowHeight}+{posX}+{posY}")
+    
+    # Black background (will be transparent)
+    rootWindow.configure(bg = 'black')
+    
+    # Label for the number with transparent background
+    numberLabel = tk.Label(rootWindow, 
+                          text = "", 
+                          font = ("Arial", size, "bold"), 
+                          fg = color, 
+                          bg = "black")  # Black = transparent
+    numberLabel.pack(expand = True)
+    
+    # Display countdown
+    for currentNumber in range(seconds, 0, -1):
+        numberLabel.config(text = str(currentNumber))
+        rootWindow.update()
+        time.sleep(1)
+    
+    # Close automatically
+    rootWindow.destroy()
+
+# Usage examples:
+# wait(3)  # Default: red, size 120, display=True
+# wait(5, display=False)  # Just sleep without display
+# wait(3, color="yellow", size=150)  # Yellow, bigger
+# wait(2, display=True, color="white", size=80)  # White, smallerg='black')  # Noir = transparent
+    
+    label = tk.Label(rootWindow, font=("Arial", 80, "bold"), fg="red", bg="black")
+    label.pack(expand=True)
+    
+    for i in range(seconds, 0, -1):
+        label.config(text=str(i))
+        rootWindow.update()
+        time.sleep(1)
+    
+    rootWindow.destroy()
+
+# Usage - remplacez votre time.wait(3) par :
+# countdown_big(3)
+# ou
+# quick_countdown(3)
 
 
 matchAction.update({
     "RCLICK": pyautogui.rightClick,
     "LCLICK": pyautogui.click,
-    "WAIT": time.sleep,
+    "WAIT": wait,
     "KEY": pyautogui.hotkey,
     "OPEN": lambda filePath: openFile(filePath.replace("[SPACE]", " ")),
     "TYPE": lambda *args: pyautogui.write(",".join(args).replace("[SPACE]", " ")),

@@ -1,17 +1,11 @@
 {
-    "email": "@",
+    "email": "",
     "coloredLogs": false,
     "version": 2,
     "new": {
-        "fix": [
-            "Resize logine logo(Was too big).",
-            "Groups size limited to 14."
-        ],
+        "fix": [],
         "add": [
-            "Rename Test task file.",
-            "Rename and delete groups.",
-            "Look for a group.",
-            "Track modified task."
+            "Nicer Wait."
         ]
     }
 }

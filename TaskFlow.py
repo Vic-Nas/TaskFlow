@@ -131,8 +131,11 @@ sys.stdout = LogRedirector(logFilePath, maxRows)
 sys.stderr = LogRedirector(logFilePath, maxRows)
 sys.excepthook = globalExceptionHandler
 
+from imports.mail import sendFeedBackMail
+from imports.settings import getSetting
+
 try:
-    from src.main import sendFeedBackMail, getSetting
+    import src.main
 except:
     traceback.print_exc()
     alert("Critical problem in the app.\nLog will be sent.")

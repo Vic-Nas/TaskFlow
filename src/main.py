@@ -54,7 +54,7 @@ def loadGroups():
             print(f"Error loading {filename}: {e}")
             continue
             
-    goodGroup = lambda group: group.titlelower().startswith(searchEntryVar.get().lower())
+    goodGroup = lambda group: group.title.lower().startswith(searchEntryVar.get().lower())
     for taskGroup in filter(goodGroup, taskGroups):
         tasksListBox.insert("end", taskGroup.title)
 

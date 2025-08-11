@@ -11,3 +11,6 @@ WAIT  5.0  1  Wait 5s
 KEY  win d  1  Click Ctrl + a
 
 KEY  win d  2  Click a
+
+LCLICK  265.0 203.0  1  Bin
+

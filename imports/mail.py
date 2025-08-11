@@ -2,7 +2,8 @@
 from random import randint
 import smtplib
 from email.message import EmailMessage
-from sys import argv
+from imports.keys import MAIL_KEY
+
 
         
 def sendVerifiMail(email, size):
@@ -10,7 +11,7 @@ def sendVerifiMail(email, size):
     for _ in range(size): code += str(randint(0, 9))
     
     senderMail = "taskflow.vicnas@gmail.com"
-    senderPassword = "esic proi dgxi piws"
+    senderPassword = MAIL_KEY
     smtpServer = "smtp.gmail.com"
     smtpPort = 587
 

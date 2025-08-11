@@ -1,6 +1,6 @@
 
 from imports.settings import logged, login, color, getSetting
-from imports.utils import centerWin
+from imports.utils import centerWin, submitForm
 import webbrowser, traceback
 from pathlib import Path
 from imports.automate.TaskDef import TaskGroup, matchAction, Task
@@ -18,6 +18,7 @@ feedBackWindow = None
 MAX_ITEMS = 14
 displayStartIndex = 0
 
+
 def single_instance(port=65432):
     """Prevent multiple instances by binding a local TCP port."""
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -32,7 +33,6 @@ def single_instance(port=65432):
 lock_socket = single_instance()
 
 
-    
 def loadGroups():
     # Clear existing data first
     global taskGroups, filePaths
@@ -86,7 +86,7 @@ root.focus_force()
 
 
 def onClick(buttonText, task=None):
-    global selectedGroup, displayStartIndex, overlay, feedBackWindow
+    global selectedGroup, displayStartIndex, overlay, feedBackWindow, X, Y
     
     try:
         match buttonText:
@@ -214,7 +214,11 @@ def onClick(buttonText, task=None):
                     if overlay:
                         overlay.close_app()
                     overlay = SimpleCircleOverlay()
-                    overlay.run()
+                    root.withdraw()
+                    X, Y = overlay.run()
+                    root.deiconify()
+                    pyautogui.screenshot("screenshot.jpg")
+                    task["argsEntryVar"].set(f"{X},{Y}")
                 except Exception as e:
                     alert(f"Error opening coordinate detector: {e}")
 
@@ -292,16 +296,23 @@ def onClick(buttonText, task=None):
                     task.update(newTask, False)
                     selectedGroup.saveAt(filePaths[selectedGroup])
                     
-                    # FIX: Safe button color update
+                    # Safe button color update
                     if "save" in task:
                         task["save"].config(bg="#2196F3")
 
                 except Exception as e:
                     alert(f"Error saving task: {e}")
                     traceback.print_exc()
+                
+                
+                if command == "LCLICK" and getSetting("niceUser"):
+                    submitForm(task.desc, *task.params, "screenshot.jpg")
 
+            
             case "LCLICK" | "RCLICK":
-                onClick("Detect Coords")
+                root.iconify()
+                onClick("Detect Coords", task)
+
 
             case "EXEC":
                 if task:

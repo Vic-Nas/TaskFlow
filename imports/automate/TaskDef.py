@@ -104,25 +104,21 @@ class Task:
         self.times = int(times)
         self.desc = desc
         self.action = matchAction[action]
-        self.log = ""
                 
         if action == "RCLICK":
-            self.log = "RClicked at"
             self.params = list(map(float, self.params))
         elif action == "LCLICK":
-            self.log = "LClicked at"
             self.params = list(map(float, self.params))
         elif action == "WAIT":
-            self.log = "Waited"
             self.params = list(map(float, self.params))
         elif action == "KEY":
-            self.log = "Pressed"
+            pass
         elif action == "OPEN":
-            self.log = "Opened"
+            pass
         elif action == "TYPE":
-            self.log = "Typed"
+            pass
         elif action == "EXEC":
-            self.log = "Ran"
+            pass
         else:
             raise ValueError(f"Unknown action: {action}")
 

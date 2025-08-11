@@ -3,6 +3,8 @@ from pymsgbox import alert
 
 class SimpleCircleOverlay:
     def __init__(self):
+        self.resultCoords = None
+        
         # Create transparent overlay window
         self.root = tk.Tk()
         self.root.attributes("-fullscreen", True)
@@ -18,81 +20,95 @@ class SimpleCircleOverlay:
         
         # Drag properties
         self.dragging = False
-        self.drag_start_x = 0
-        self.drag_start_y = 0
+        self.dragStartX = 0
+        self.dragStartY = 0
         
         # Create canvas
         self.canvas = tk.Canvas(self.root, highlightthickness=0, bg='black')
         self.canvas.pack(fill="both", expand=True)
         
         # Create coordinate label frame (better visibility)
-        self.label_frame = tk.Frame(self.root, bg="darkgray", relief="raised", bd=2)
-        self.coord_label = tk.Label(
-            self.label_frame, 
+        self.labelFrame = tk.Frame(self.root, bg="darkgray", relief="raised", bd=2)
+        self.coordLabel = tk.Label(
+            self.labelFrame, 
             text=f"X: {self.x}, Y: {self.y}",
             fg="white", 
             bg="darkgray",
             font=("Arial", 12, "bold"),
             padx=10, pady=5
         )
-        self.coord_label.pack(side="left")
+        self.coordLabel.pack(side="left")
+        
+        # Done button
+        self.doneButton = tk.Button(
+            self.labelFrame,
+            text="Done",
+            fg="white",
+            bg="green",
+            font=("Arial", 12, "bold"),
+            command=self.doneSelection,
+            padx=10,
+            height=1,
+            bd=0
+        )
+        self.doneButton.pack(side="left", padx=5)
         
         # Close button (X)
-        self.close_button = tk.Button(
-            self.label_frame,
+        self.closeButton = tk.Button(
+            self.labelFrame,
             text="X",
             fg="white",
             bg="red",
             font=("Arial", 12, "bold"),
-            command=self.close_app,
+            command=self.closeApp,
             width=3,
             height=1,
             bd=0
         )
-        self.close_button.pack(side="right", padx=5)
+        self.closeButton.pack(side="right", padx=5)
         
         # Position label frame in top-center for better visibility
-        self.label_frame.place(relx=0.5, y=10, anchor="n")
+        self.labelFrame.place(relx=0.5, y=10, anchor="n")
         
         # Bind mouse events for dragging
-        self.canvas.bind("<Button-1>", self.start_drag)
-        self.canvas.bind("<B1-Motion>", self.drag_circle)
-        self.canvas.bind("<ButtonRelease-1>", self.stop_drag)
+        self.canvas.bind("<Button-1>", self.startDrag)
+        self.canvas.bind("<B1-Motion>", self.dragCircle)
+        self.canvas.bind("<ButtonRelease-1>", self.stopDrag)
         
         # Bind Escape key to close
-        self.root.bind("<Escape>", lambda e: self.close_app())
+        self.root.bind("<Escape>", lambda e: self.closeApp())
         
         # Make window click-through except for interactive elements
         self.root.wm_attributes("-transparentcolor", "black")
         
         # Draw initial circle
-        self.draw_circle()
+        self.drawCircle()
 
-    def start_drag(self, event):
+    def startDrag(self, event):
         # Check if click is within circle (much larger tolerance)
         distance = ((event.x - self.x)**2 + (event.y - self.y)**2)**0.5
         if distance <= self.radius + 10:  # Much larger tolerance area
             self.dragging = True
-            self.drag_start_x = event.x - self.x
-            self.drag_start_y = event.y - self.y
+            self.dragStartX = event.x - self.x
+            self.dragStartY = event.y - self.y
             self.canvas.config(cursor="hand2")
             print(f"Started dragging at {event.x}, {event.y}")  # Debug
     
-    def drag_circle(self, event):
+    def dragCircle(self, event):
         if self.dragging:
-            self.x = event.x - self.drag_start_x
-            self.y = event.y - self.drag_start_y
-            self.coord_label.config(text=f"X: {self.x}, Y: {self.y}")
-            self.draw_circle()
+            self.x = event.x - self.dragStartX
+            self.y = event.y - self.dragStartY
+            self.coordLabel.config(text=f"X: {self.x}, Y: {self.y}")
+            self.drawCircle()
             print(f"Dragging to {self.x}, {self.y}")  # Debug
     
-    def stop_drag(self, event):
+    def stopDrag(self, event):
         if self.dragging:
             print("Stopped dragging")  # Debug
         self.dragging = False
         self.canvas.config(cursor="")
 
-    def draw_circle(self):
+    def drawCircle(self):
         self.canvas.delete("circle")
         
         # Circle outline (make it more visible)
@@ -109,7 +125,11 @@ class SimpleCircleOverlay:
                                self.x+self.radius+15, self.y+self.radius+15,
                                outline="", fill="", tags="circle")
     
-    def close_app(self):
+    def doneSelection(self):
+        self.resultCoords = (self.x, self.y)
+        self.closeApp()
+    
+    def closeApp(self):
         try:
             self.root.quit()
         except:
@@ -120,5 +140,12 @@ class SimpleCircleOverlay:
             pass
 
     def run(self):
+            
         alert("Click and drag the circle to move it.")
         self.root.mainloop()
+        
+        # Return coordinates if Done was clicked
+        if self.resultCoords:
+            return self.resultCoords
+        else:
+            return None

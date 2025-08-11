@@ -67,6 +67,95 @@ def checkCode(code, win):
         setSetting("email", email)
         win.destroy()
         
+        # Beautiful participation request window
+        participationWin = tkinter.Tk()
+        participationWin.title("AI Training Participation")
+        participationWin.geometry("450x300")
+        participationWin.configure(bg="#f0f8ff")
+        participationWin.resizable(False, False)
+        
+        # Center the window
+        participationWin.update_idletasks()
+        x = (participationWin.winfo_screenwidth() // 2) - (450 // 2)
+        y = (participationWin.winfo_screenheight() // 2) - (300 // 2)
+        participationWin.geometry(f"450x300+{x}+{y}")
+        
+        # Main frame with padding
+        mainFrame = tkinter.Frame(participationWin, bg="#f0f8ff", padx=30, pady=20)
+        mainFrame.pack(fill="both", expand=True)
+        
+        # Title
+        titleLabel = tkinter.Label(mainFrame, 
+                                 text="🤖 Help Improve AI Technology!", 
+                                 font=("Arial", 16, "bold"), 
+                                 bg="#f0f8ff", 
+                                 fg="#2c5aa0")
+        titleLabel.pack(pady=(0, 15))
+        
+        # Description
+        descriptionText = ("Would you like to participate in AI training\n"
+                          "for detecting coordinates?\n\n"
+                          "Your participation helps us:\n"
+                          "• Improve accuracy of coordinate detection\n"
+                          "• Enhance AI learning algorithms\n"
+                          "• Contribute to cutting-edge research\n\n"
+                          "Join thousands of users making AI smarter!")
+        
+        descLabel = tkinter.Label(mainFrame, 
+                                text=descriptionText,
+                                font=("Arial", 10), 
+                                bg="#f0f8ff", 
+                                fg="#333333",
+                                justify="left")
+        descLabel.pack(pady=(0, 20))
+        
+        # Button frame
+        buttonFrame = tkinter.Frame(mainFrame, bg="#f0f8ff")
+        buttonFrame.pack(pady=10)
+        
+        def onAccept():
+            setSetting("niceUser", True)
+            participationWin.destroy()
+            
+        def onDecline():
+            setSetting("niceUser", False)
+            participationWin.destroy()
+        
+        # Accept button (attractive green)
+        acceptBtn = tkinter.Button(buttonFrame, 
+                                 text="✓ Yes, I'll participate!", 
+                                 command=onAccept,
+                                 font=("Arial", 11, "bold"),
+                                 bg="#4CAF50", 
+                                 fg="white",
+                                 relief="raised",
+                                 borderwidth=2,
+                                 padx=20, 
+                                 pady=10,
+                                 cursor="hand2")
+        acceptBtn.pack(side="left", padx=(0, 15))
+        
+        # Decline button (neutral gray)
+        declineBtn = tkinter.Button(buttonFrame, 
+                                  text="No thanks", 
+                                  command=onDecline,
+                                  font=("Arial", 10),
+                                  bg="#cccccc", 
+                                  fg="#666666",
+                                  relief="raised",
+                                  borderwidth=1,
+                                  padx=20, 
+                                  pady=10,
+                                  cursor="hand2")
+        declineBtn.pack(side="right")
+        
+        # Make window modal
+        participationWin.transient()
+        participationWin.grab_set()
+        participationWin.focus_set()
+        
+        participationWin.mainloop()
+        
 
 def sendVerifCode(mail):
     global email

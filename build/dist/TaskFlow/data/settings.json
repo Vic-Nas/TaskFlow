@@ -1,13 +1,12 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 8,
+    "version": 9,
     "new": {
-        "fix": [
-            "Canceled message removed.",
-            "Window in taskbar when running script.",
-            "Wrong critical error."
-        ],
-        "add": []
-    }
+        "fix": [],
+        "add": [
+            "LClick data collection"
+        ]
+    },
+    "niceUser": true
 }

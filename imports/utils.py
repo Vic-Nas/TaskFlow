@@ -3,6 +3,8 @@ import tkinter, os, sys, subprocess
 from tkinter import font as tkfont
 from json import load, dump
 from pathlib import Path
+import requests
+from imports.keys import IMGBB_API_KEY, FORM_DATA, FORM_URL
 
 
 
@@ -196,3 +198,33 @@ def alert(content, headings = None, bg = "#222", fg = "#fff", title = "Info", se
     win.grab_set()
     root.mainloop() 
     root.destroy() 
+    
+    
+    
+
+def uploadImageToImgbb(imagePath):
+    with open(imagePath, "rb") as file:
+        url = "https://api.imgbb.com/1/upload"
+        response = requests.post(url, files={"image": file}, data={"key": IMGBB_API_KEY})
+        if response.status_code == 200:
+            jsonResp = response.json()
+            if jsonResp['success']:
+                return jsonResp['data']['url']  # direct image link
+            else:
+                raise Exception("Upload failed: " + str(jsonResp))
+        else:
+            raise Exception(f"HTTP Error: {response.status_code}")
+        
+
+def submitForm(description: str, xCoord: float, yCoord: float, imagePath: str) -> bool:
+    xCoord = str(xCoord)
+    yCoord = str(yCoord)
+    imageLink = uploadImageToImgbb(imagePath)
+    data = FORM_DATA.copy()
+    data["entry.705277571"] = description
+    data["entry.383106297"] = xCoord
+    data["entry.1253928474"] = yCoord
+    data["entry.114537537"] = imageLink
+
+    response = requests.post(FORM_URL, data=data)
+    return response.status_code == 200

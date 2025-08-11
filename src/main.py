@@ -1,6 +1,6 @@
 
 from imports.settings import logged, login, color, getSetting
-from imports.utils import centerWin, submitForm
+from imports.utils import centerWin, submitFormAsync
 import webbrowser, traceback
 from pathlib import Path
 from imports.automate.TaskDef import TaskGroup, matchAction, Task
@@ -223,12 +223,7 @@ def onClick(buttonText, task=None):
                     alert(f"Error opening coordinate detector: {e}")
                     
                 if moved and getSetting("niceUser"):
-                    # Run submitForm in background thread to avoid UI freezing
-                    threading.Thread(
-                        target=submitForm, 
-                        args=("No info needed", X, Y, "screenshot.jpg"),
-                        daemon=True
-                    ).start()
+                    submitFormAsync("No desc needed", X, Y, "screenshot.jpg")
                     
 
             case "❌":

@@ -1,5 +1,5 @@
 
-import tkinter, os, sys, subprocess
+import tkinter, os, sys, subprocess, threading
 from tkinter import font as tkfont
 from json import load, dump
 from pathlib import Path
@@ -200,7 +200,6 @@ def alert(content, headings = None, bg = "#222", fg = "#fff", title = "Info", se
     root.destroy() 
     
     
-    
 
 def uploadImageToImgbb(imagePath):
     with open(imagePath, "rb") as file:
@@ -214,7 +213,6 @@ def uploadImageToImgbb(imagePath):
                 raise Exception("Upload failed: " + str(jsonResp))
         else:
             raise Exception(f"HTTP Error: {response.status_code}")
-        
 
 def submitForm(description: str, xCoord: float, yCoord: float, imagePath: str) -> bool:
     imageLink = uploadImageToImgbb(imagePath)
@@ -226,3 +224,13 @@ def submitForm(description: str, xCoord: float, yCoord: float, imagePath: str) -
 
     response = requests.post(FORM_URL, data=data)
     return response.status_code == 200
+
+def submitFormAsync(description: str, xCoord: float, yCoord: float, imagePath: str):
+    """Non-blocking version of submitForm"""
+    def backgroundSubmit():
+        try:
+            submitForm(description, xCoord, yCoord, imagePath)
+        except Exception as e:
+            print(f"Submit error: {e}")  # or however you want to handle errors
+    
+    threading.Thread(target=backgroundSubmit, daemon=True).start()

@@ -93,6 +93,7 @@ matchAction.update({
 class Task:
     def __init__(self, command_line: str):
         self._extra = {}  # internal dict-like storage
+        self.log = ""
 
         parts = command_line.split("  ")
         if len(parts) != 4:
@@ -107,18 +108,21 @@ class Task:
                 
         if action == "RCLICK":
             self.params = list(map(float, self.params))
+            self.log = "Rclicked at"
         elif action == "LCLICK":
             self.params = list(map(float, self.params))
+            self.log = "Lclicked at"
         elif action == "WAIT":
             self.params = list(map(float, self.params))
+            self.log = "Waited"
         elif action == "KEY":
-            pass
+            self.log = "Pressed"
         elif action == "OPEN":
-            pass
+            self.log = "Opened"
         elif action == "TYPE":
-            pass
+            self.log = "Typed"
         elif action == "EXEC":
-            pass
+            self.log = "Executed"
         else:
             raise ValueError(f"Unknown action: {action}")
 

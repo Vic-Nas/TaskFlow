@@ -72,7 +72,7 @@ if not logged():
     
 root = tkinter.Tk()
 root.geometry("1200x800")
-root.resizable(False, False)
+# root.resizable(True, True)
 root.iconbitmap(Path("data")/"VN.ico")
 root.title("TaskFlow")
 
@@ -82,6 +82,8 @@ fontStyle = "Times New Roman"
 root.deiconify()
 root.lift()
 root.focus_force()
+
+
 
 def onClick(buttonText, task=None):
     global selectedGroup, displayStartIndex, overlay, feedBackWindow
@@ -983,6 +985,5 @@ def on_search_change(*args):
         print(f"Search error: {e}")
 
 searchEntryVar.trace_add("write", on_search_change)
-
 
 root.mainloop()

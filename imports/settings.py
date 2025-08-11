@@ -84,6 +84,9 @@ def login():
     loginWin.iconbitmap(Path("data")/"mail.ico")
     loginWin.resizable(False, False)
     centerWin(loginWin)
+    loginWin.deiconify()
+    loginWin.lift()
+    loginWin.focus_force()
     
     
     logo = logoGen(100, 100)    

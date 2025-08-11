@@ -34,7 +34,7 @@ lock_socket = single_instance()
 
     
 def loadGroups():
-    # FIX 1: Clear existing data first
+    # Clear existing data first
     global taskGroups, filePaths
     taskGroups.clear()
     filePaths.clear()
@@ -44,7 +44,7 @@ def loadGroups():
         return
         
     for filename in os.listdir(tasksDir):
-        if not filename.endswith('.task'):  # FIX 6: Validate file type
+        if not filename.endswith('.task'):  # Validate file type
             continue
         filePath = os.path.join(tasksDir, filename)
         try:
@@ -79,6 +79,9 @@ root.title("TaskFlow")
 
 centerWin(root)
 fontStyle = "Times New Roman"
+root.deiconify()
+root.lift()
+root.focus_force()
 
 def onClick(buttonText, task=None):
     global selectedGroup, displayStartIndex, overlay, feedBackWindow
@@ -203,8 +206,6 @@ def onClick(buttonText, task=None):
                         loadGroups()
                     except Exception as e:
                         alert(f"Error renaming group: {e}")
-                else:
-                    alert("Canceled")
 
             case "Detect Coords":
                 try:
@@ -486,8 +487,16 @@ def onClick(buttonText, task=None):
                     fileFrame.pack(fill="x", pady=(0, 8))
                     fileFrame.pack_propagate(False)
                     
-                    fileScroll = tkinter.Scrollbar(fileFrame, orient="vertical")
-                    fileScroll.pack(side="right", fill="y")
+                    fileScroll = tkinter.Scrollbar(
+                        fileFrame,
+                        orient="vertical",
+                        bg="lightblue",      
+                        troughcolor="white", 
+                        activebackground="blue",# Hover
+                        relief="flat",         
+                        highlightthickness=0
+                    )
+
                     
                     fileListBox = tkinter.Listbox(fileFrame, yscrollcommand=fileScroll.set,
                                                 bg="white", fg="black", relief="flat",

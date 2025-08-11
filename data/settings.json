@@ -1,11 +1,13 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 6,
+    "version": 7,
     "new": {
-        "fix": [],
-        "add": [
-            "Nicer Wait."
-        ]
+        "fix": [
+            "Canceled message removed.",
+            "Window in taskbar when running script.",
+            "Wrong critical error."
+        ],
+        "add": []
     }
 }

@@ -12,6 +12,7 @@ from pymsgbox import prompt
 from imports.utils import alert
 import tkinter, sys, pyautogui, os, socket
 from imports.mail import sendFeedBackMail
+import threading
 
 overlay = None
 feedBackWindow = None
@@ -213,16 +214,21 @@ def onClick(buttonText, task=None):
                 try:
                     if overlay:
                         overlay.closeApp()
-                    overlay = SimpleCircleOverlay(screenshotPath = "screenshot.jpg")
+                    overlay = SimpleCircleOverlay(screenshotPath="screenshot.jpg")
                     root.withdraw()
                     X, Y, moved = overlay.run()
                     root.deiconify()
                     task["argsEntryVar"].set(f"{X},{Y}")
                 except Exception as e:
                     alert(f"Error opening coordinate detector: {e}")
-                
+                    
                 if moved and getSetting("niceUser"):
-                    submitForm("No info needed", X, Y, "screenshot.jpg")
+                    # Run submitForm in background thread to avoid UI freezing
+                    threading.Thread(
+                        target=submitForm, 
+                        args=("No info needed", X, Y, "screenshot.jpg"),
+                        daemon=True
+                    ).start()
                     
 
             case "❌":

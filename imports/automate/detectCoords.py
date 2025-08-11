@@ -90,22 +90,26 @@ class SimpleCircleOverlay:
         distance = ((event.x - self.x)**2 + (event.y - self.y)**2)**0.5
         if distance <= self.radius + 10:  # Much larger tolerance area
             self.dragging = True
-            self.dragStartX = event.x - self.x
-            self.dragStartY = event.y - self.y
+            self.dragStartX = event.x
+            self.dragStartY = event.y
+            self.startCircleX = self.x
+            self.startCircleY = self.y
             self.canvas.config(cursor="hand2")
             print(f"Started dragging at {event.x}, {event.y}")  # Debug
     
     def dragCircle(self, event):
         if self.dragging:
-            newX = event.x - self.dragStartX
-            newY = event.y - self.dragStartY
+            # Calculate new position based on mouse movement from start position
+            deltaX = event.x - self.dragStartX
+            deltaY = event.y - self.dragStartY
             
-            # Check if position actually changed
-            if newX != self.x or newY != self.y:
+            self.x = self.startCircleX + deltaX
+            self.y = self.startCircleY + deltaY
+            
+            # Check if position changed from initial position
+            if self.x != self.initialX or self.y != self.initialY:
                 self.moved = True
                 
-            self.x = newX
-            self.y = newY
             self.drawCircle()
             print(f"Dragging to {self.x}, {self.y}")  # Debug
     

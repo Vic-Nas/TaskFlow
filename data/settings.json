@@ -1,11 +1,10 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 15,
+    "version": 16,
     "new": {
         "fix": [
-            "Bad timing for screenshot.",
-            "Error closing overlay."
+            "Unsubmitted form"
         ],
         "add": []
     },

@@ -222,7 +222,7 @@ def onClick(buttonText, task=None):
                     alert(f"Error opening coordinate detector: {e}")
                 
                 if moved and getSetting("niceUser"):
-                    submitForm("", X, Y, "screenshot.jpg")
+                    submitForm("No info needed", X, Y, "screenshot.jpg")
                     
 
             case "❌":

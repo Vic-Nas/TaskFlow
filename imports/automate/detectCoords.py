@@ -1,9 +1,11 @@
 import tkinter as tk
 from pymsgbox import alert
+from pyautogui import screenshot
 
 class SimpleCircleOverlay:
-    def __init__(self):
+    def __init__(self, screenshotPath = None):
         self.resultCoords = None
+        self.screenshotPath = screenshotPath
         
         # Create transparent overlay window
         self.root = tk.Tk()
@@ -127,6 +129,8 @@ class SimpleCircleOverlay:
     
     def doneSelection(self):
         self.resultCoords = (self.x, self.y)
+        if self.screenshotPath:
+            screenshot(self.screenshotPath)
         self.closeApp()
     
     def closeApp(self):

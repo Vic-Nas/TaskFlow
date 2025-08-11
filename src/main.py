@@ -212,12 +212,11 @@ def onClick(buttonText, task=None):
             case "Detect Coords":
                 try:
                     if overlay:
-                        overlay.close_app()
-                    overlay = SimpleCircleOverlay()
+                        overlay.closeApp()
+                    overlay = SimpleCircleOverlay(screenshotPath = "screenshot.jpg")
                     root.withdraw()
                     X, Y = overlay.run()
                     root.deiconify()
-                    pyautogui.screenshot("screenshot.jpg")
                     task["argsEntryVar"].set(f"{X},{Y}")
                 except Exception as e:
                     alert(f"Error opening coordinate detector: {e}")

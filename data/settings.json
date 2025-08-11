@@ -1,9 +1,12 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 10,
+    "version": 11,
     "new": {
-        "fix": [],
+        "fix": [
+            "Bad timing for screenshot.",
+            "Error closing overlay."
+        ],
         "add": [
             "LClick data collection"
         ]

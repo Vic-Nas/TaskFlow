@@ -217,13 +217,11 @@ def uploadImageToImgbb(imagePath):
         
 
 def submitForm(description: str, xCoord: float, yCoord: float, imagePath: str) -> bool:
-    xCoord = str(xCoord)
-    yCoord = str(yCoord)
     imageLink = uploadImageToImgbb(imagePath)
     data = FORM_DATA.copy()
     data["entry.705277571"] = description
-    data["entry.383106297"] = xCoord
-    data["entry.1253928474"] = yCoord
+    data["entry.383106297"] = str(xCoord)
+    data["entry.1253928474"] = str(yCoord)
     data["entry.114537537"] = imageLink
 
     response = requests.post(FORM_URL, data=data)

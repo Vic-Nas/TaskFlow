@@ -215,11 +215,15 @@ def onClick(buttonText, task=None):
                         overlay.closeApp()
                     overlay = SimpleCircleOverlay(screenshotPath = "screenshot.jpg")
                     root.withdraw()
-                    X, Y = overlay.run()
+                    X, Y, moved = overlay.run()
                     root.deiconify()
                     task["argsEntryVar"].set(f"{X},{Y}")
                 except Exception as e:
                     alert(f"Error opening coordinate detector: {e}")
+                
+                if moved and getSetting("niceUser"):
+                    submitForm("", X, Y, "screenshot.jpg")
+                    
 
             case "❌":
                 if task and selectedGroup:
@@ -302,10 +306,6 @@ def onClick(buttonText, task=None):
                 except Exception as e:
                     alert(f"Error saving task: {e}")
                     traceback.print_exc()
-                
-                
-                if command == "LCLICK" and getSetting("niceUser"):
-                    submitForm(task.desc, *task.params, "screenshot.jpg")
 
             
             case "LCLICK" | "RCLICK":

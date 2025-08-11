@@ -17,8 +17,6 @@ class SimpleCircleOverlay:
         
         # Circle properties
         self.radius = 20
-        self.x = 400
-        self.y = 300
         
         # Drag properties
         self.dragging = False
@@ -29,17 +27,18 @@ class SimpleCircleOverlay:
         self.canvas = tk.Canvas(self.root, highlightthickness=0, bg='black')
         self.canvas.pack(fill="both", expand=True)
         
-        # Create coordinate label frame (better visibility)
+        # Center circle on screen (after canvas is created)
+        self.root.update()  # Force window update to get proper dimensions
+        screenWidth = self.root.winfo_screenwidth()
+        screenHeight = self.root.winfo_screenheight()
+        self.x = screenWidth // 2
+        self.y = screenHeight // 2
+        self.initialX = self.x
+        self.initialY = self.y
+        self.moved = False
+        
+        # Create button frame (without coordinates label)
         self.labelFrame = tk.Frame(self.root, bg="darkgray", relief="raised", bd=2)
-        self.coordLabel = tk.Label(
-            self.labelFrame, 
-            text=f"X: {self.x}, Y: {self.y}",
-            fg="white", 
-            bg="darkgray",
-            font=("Arial", 12, "bold"),
-            padx=10, pady=5
-        )
-        self.coordLabel.pack(side="left")
         
         # Done button
         self.doneButton = tk.Button(
@@ -98,9 +97,15 @@ class SimpleCircleOverlay:
     
     def dragCircle(self, event):
         if self.dragging:
-            self.x = event.x - self.dragStartX
-            self.y = event.y - self.dragStartY
-            self.coordLabel.config(text=f"X: {self.x}, Y: {self.y}")
+            newX = event.x - self.dragStartX
+            newY = event.y - self.dragStartY
+            
+            # Check if position actually changed
+            if newX != self.x or newY != self.y:
+                self.moved = True
+                
+            self.x = newX
+            self.y = newY
             self.drawCircle()
             print(f"Dragging to {self.x}, {self.y}")  # Debug
     
@@ -148,8 +153,8 @@ class SimpleCircleOverlay:
         alert("Click and drag the circle to move it.")
         self.root.mainloop()
         
-        # Return coordinates if Done was clicked
+        # Return coordinates and moved status if Done was clicked
         if self.resultCoords:
-            return self.resultCoords
+            return (self.resultCoords[0], self.resultCoords[1], self.moved)
         else:
             return None

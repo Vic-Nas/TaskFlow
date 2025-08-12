@@ -55,71 +55,63 @@ def updateWindows():
     
     fixes = "\n".join(newDetails["fix"])
     added = "\n".join(newDetails["add"])
+    alert([f"{fixes}", f"{added}"], title = "Confirm update:", headings = ["Fixes", "Added"])
     
-    # Show update info with your alert function - no choice, just proceed
-    alert([f"{fixes}", f"{added}"], title="Confirm update:", headings=["Fixes", "Added"])
-    
-    # NOW show loading window during the actual update process
+    # Show loading window during update process
     import tkinter as tk
     from tkinter import ttk
     import threading
     import time
     
-    # Create loading window
     loadingWindow = tk.Tk()
     loadingWindow.title("TaskFlow Update")
-    loadingWindow.geometry("350x120")
+    loadingWindow.geometry("350x100")
     loadingWindow.resizable(False, False)
     
-    # Center the window
+    # Center window
     loadingWindow.update_idletasks()
-    x = (loadingWindow.winfo_screenwidth() // 2) - (350 // 2)
-    y = (loadingWindow.winfo_screenheight() // 2) - (120 // 2)
-    loadingWindow.geometry(f"350x120+{x}+{y}")
-    
-    # Disable close button
+    x = (loadingWindow.winfo_screenwidth() // 2) - (175)
+    y = (loadingWindow.winfo_screenheight() // 2) - (50)
+    loadingWindow.geometry(f"350x100+{x}+{y}")
     loadingWindow.protocol("WM_DELETE_WINDOW", lambda: None)
     
-    tk.Label(loadingWindow, text="Updating TaskFlow...", font=("Arial", 12, "bold")).pack(pady=15)
-    
+    tk.Label(loadingWindow, text="Updating TaskFlow...", font=("Arial", 12)).pack(pady=10)
     statusLabel = tk.Label(loadingWindow, text="Preparing update...", font=("Arial", 9))
     statusLabel.pack(pady=5)
-    
     progressBar = ttk.Progressbar(loadingWindow, mode='indeterminate', length=250)
     progressBar.pack(pady=10)
     progressBar.start()
     
-    def updateInBackground():
-        """Run the original update logic in background thread"""
-        try:
-            # Update status
-            loadingWindow.after(0, lambda: statusLabel.config(text="Creating directories..."))
-            time.sleep(0.5)
-            
-            tempDir = os.path.abspath("tempUpdate")
-            backupDir = os.path.abspath("backup")
-            
-            # Get the actual executable path (works for both .py and .exe)
-            if getattr(sys, 'frozen', False):
-                # Running as compiled exe
-                currentExePath = sys.executable
-                appDir = os.path.dirname(currentExePath)
-            else:
-                # Running as python script
-                currentExePath = os.path.abspath(sys.argv[0])
-                appDir = os.path.dirname(currentExePath)
-            
-            exeName = os.path.basename(currentExePath)
-            
-            # Create temp and backup dirs
-            os.makedirs(tempDir, exist_ok=True)
-            os.makedirs(backupDir, exist_ok=True)
-            
-            loadingWindow.after(0, lambda: statusLabel.config(text="Creating update script..."))
-            time.sleep(0.5)
-            
-            # Create batch script FIRST, then update version after successful download
-            batScript = f"""@echo off
+    def doUpdate():
+        statusLabel.config(text="Creating directories...")
+        loadingWindow.update()
+        time.sleep(0.3)
+        
+        tempDir = os.path.abspath("tempUpdate")
+        backupDir = os.path.abspath("backup")
+        
+        # Get the actual executable path (works for both .py and .exe)
+        if getattr(sys, 'frozen', False):
+            # Running as compiled exe
+            currentExePath = sys.executable
+            appDir = os.path.dirname(currentExePath)
+        else:
+            # Running as python script
+            currentExePath = os.path.abspath(sys.argv[0])
+            appDir = os.path.dirname(currentExePath)
+        
+        exeName = os.path.basename(currentExePath)
+        
+        # Create temp and backup dirs
+        os.makedirs(tempDir, exist_ok=True)
+        os.makedirs(backupDir, exist_ok=True)
+        
+        statusLabel.config(text="Creating update script...")
+        loadingWindow.update()
+        time.sleep(0.3)
+        
+        # Create batch script FIRST, then update version after successful download
+        batScript = f"""@echo off
 echo Update started - Local version: {localVersion}, Repository version: {repoVersion} > update.log
 
 echo Creating backup... >> update.log
@@ -156,46 +148,38 @@ if exist "{tempDir}" rmdir /s /q "{tempDir}" >> update.log 2>&1
 echo Update finished >> update.log
 del "%~0"
 """
-            
-            batPath = os.path.join(os.path.dirname(currentExePath), "update.bat")
-            
-            with open(batPath, "w") as batFile:
-                batFile.write(batScript)
-            
-            loadingWindow.after(0, lambda: statusLabel.config(text="Updating version..."))
-            time.sleep(0.5)
-            
-            # Update version only AFTER successful batch creation
-            try:
-                setSetting("version", repoVersion)
-            except:
-                pass
-            
-            loadingWindow.after(0, lambda: statusLabel.config(text="Starting update process..."))
-            time.sleep(1)
-            
-            # Launch batch silently and exit current process
-            subprocess.Popen([batPath], cwd=os.path.dirname(currentExePath), creationflags=subprocess.CREATE_NO_WINDOW)
-            
-            loadingWindow.after(0, lambda: statusLabel.config(text="Restarting TaskFlow..."))
-            time.sleep(1)
-            
-            # Close loading window and exit
-            loadingWindow.after(0, loadingWindow.destroy)
-            
-            # Exit current process to avoid relaunch loop
-            sys.exit(0)
-            
-        except Exception as e:
-            loadingWindow.after(0, lambda: statusLabel.config(text=f"Update failed: {str(e)}"))
-            time.sleep(2)
-            loadingWindow.after(0, loadingWindow.destroy)
+        
+        batPath = os.path.join(os.path.dirname(currentExePath), "update.bat")
+        
+        with open(batPath, "w") as batFile:
+            batFile.write(batScript)
+        
+        statusLabel.config(text="Updating version...")
+        loadingWindow.update()
+        time.sleep(0.3)
+        
+        # Update version only AFTER successful batch creation
+        # The new version will update its own settings when it starts
+        try:
+            # Only update if we got this far successfully
+            setSetting("version", repoVersion)
+        except:
+            # If setting fails, don't abort the update
+            pass
+        
+        statusLabel.config(text="Starting update...")
+        loadingWindow.update()
+        time.sleep(0.5)
+        
+        # Launch batch silently and exit current process
+        subprocess.Popen([batPath], cwd=os.path.dirname(currentExePath), creationflags=subprocess.CREATE_NO_WINDOW)
+        
+        loadingWindow.destroy()
+        # Exit current process to avoid relaunch loop
+        sys.exit(0)
     
-    # Start update in background thread
-    updateThread = threading.Thread(target=updateInBackground, daemon=True)
-    updateThread.start()
-    
-    # Show loading window (this will block until window is destroyed)
+    # Start update after brief delay
+    loadingWindow.after(500, doUpdate)
     loadingWindow.mainloop()
     
 

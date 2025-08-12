@@ -199,4 +199,7 @@ def updateWindows():
         subprocess.Popen([os.path.abspath("TaskFlow.exe")], shell=False)
 
 
-updateWindows()
+try:
+    updateWindows()
+except:
+    alert("Update failed. Consider adding installation\nfolder to antivirus exclusion path.")

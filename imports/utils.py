@@ -48,7 +48,6 @@ def updateWindows():
         
         # Check if update is needed
         if localVersion == repoVersion:
-            alert("Up to date.")
             return
         
     except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, Exception):

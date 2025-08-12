@@ -8,10 +8,6 @@ from tkinter import ttk
 import time
 
 
-# Detect if running as script or executable
-fileName = os.path.basename(sys.argv[0])
-
-
 class UpdateUI:
     def __init__(self):
         self.root = tk.Tk()
@@ -90,7 +86,7 @@ def updateWindows():
     import tempfile
     
     newDetails = {}
-    
+        
     try:
         # Get local version
         localVersion = getSetting("version")
@@ -259,3 +255,6 @@ def updateWindows():
     
     # Show UI during process
     ui.root.mainloop()
+    
+    
+updateWindows()

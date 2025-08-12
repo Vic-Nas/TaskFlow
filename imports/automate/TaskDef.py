@@ -113,7 +113,12 @@ class Task:
             self.params = list(map(float, self.params))
             self.log = "Lclicked at"
         elif action == "WAIT":
-            self.params = list(map(float, self.params))
+            self.params[0] = float(self.params[0])
+            if len(self.params) == 2: 
+                if self.params[1] in ["False", "0"]:
+                    self.params[1] = False
+                else:
+                    self.params[1] = True
             self.log = "Waited"
         elif action == "KEY":
             self.log = "Pressed"

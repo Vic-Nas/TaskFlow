@@ -1,11 +1,16 @@
-from imports.settings import getSetting, setSetting
-from imports.utils import alert
-
+import threading
 import sys
-import subprocess, os
+import subprocess
+import os
 import tkinter as tk
 from tkinter import ttk
 import time
+from imports.settings import getSetting, setSetting
+from imports.utils import alert
+import urllib.request
+import json
+import shutil
+import tempfile
 
 
 class UpdateUI:
@@ -14,45 +19,37 @@ class UpdateUI:
         self.root.title("TaskFlow - Update")
         self.root.geometry("400x250")
         self.root.resizable(False, False)
-        
-        # Center the window
+
+        # Center window
         self.root.update_idletasks()
         x = (self.root.winfo_screenwidth() // 2) - (400 // 2)
         y = (self.root.winfo_screenheight() // 2) - (250 // 2)
         self.root.geometry(f"400x250+{x}+{y}")
-        
+
         self.setupUI()
-        
+
     def setupUI(self):
-        # Main frame
         mainFrame = ttk.Frame(self.root, padding="20")
         mainFrame.pack(fill=tk.BOTH, expand=True)
-        
-        # Title
-        titleLabel = ttk.Label(mainFrame, text="TaskFlow Update", 
-                               font=("Arial", 14, "bold"))
+
+        titleLabel = ttk.Label(mainFrame, text="TaskFlow Update", font=("Arial", 14, "bold"))
         titleLabel.pack(pady=(0, 20))
-        
-        # Status label
-        self.statusLabel = ttk.Label(mainFrame, text="Preparing update...", 
-                                     font=("Arial", 10))
+
+        self.statusLabel = ttk.Label(mainFrame, text="Preparing update...", font=("Arial", 10))
         self.statusLabel.pack(pady=(0, 10))
-        
-        # Progress bar
+
         self.progressBar = ttk.Progressbar(mainFrame, mode='determinate', length=300)
         self.progressBar.pack(pady=(0, 20))
-        
-        # Details text area
-        self.detailsText = tk.Text(mainFrame, height=6, width=45, 
-                                   wrap=tk.WORD, state=tk.DISABLED)
+
+        self.detailsText = tk.Text(mainFrame, height=6, width=45, wrap=tk.WORD, state=tk.DISABLED)
         self.detailsText.pack(pady=(0, 10))
-        
+
     def updateStatus(self, text, progressValue=None):
         self.statusLabel.config(text=text)
         if progressValue is not None:
             self.progressBar['value'] = progressValue
         self.root.update()
-        
+
     def addDetail(self, text):
         self.detailsText.config(state=tk.NORMAL)
         self.detailsText.insert(tk.END, text + "\n")
@@ -62,15 +59,12 @@ class UpdateUI:
 
 
 def downloadWithProgress(url, filename, ui):
-    """Downloads a file with progress bar"""
-    import urllib.request
-    
     def progressHook(blockNum, blockSize, totalSize):
         if totalSize > 0:
             downloaded = blockNum * blockSize
             percent = min(100, (downloaded * 100) // totalSize)
             ui.updateStatus(f"Downloading... {percent}%", 20 + (percent * 0.4))
-            
+
     try:
         urllib.request.urlretrieve(url, filename, progressHook)
         return True
@@ -79,182 +73,90 @@ def downloadWithProgress(url, filename, ui):
         return False
 
 
-def updateWindows():
-    import urllib.request
-    import json
-    import shutil
-    import tempfile
-    
-    newDetails = {}
-        
-    try:
-        # Get local version
-        localVersion = getSetting("version")
-        
-        # Get repository version
-        repoUrl = "https://raw.githubusercontent.com/Vic-Nas/TaskFlow/main/data/settings.json"
-        
-        with urllib.request.urlopen(repoUrl, timeout=10) as response:
-            repoSettings = json.loads(response.read().decode('utf-8'))
-        
-        repoVersion = repoSettings.get("version")
-        newDetails = repoSettings.get("new", {})
-        
-        # Ensure repoVersion is an integer
-        if repoVersion is None:
-            return
-        
-        try:
-            repoVersion = int(repoVersion)
-        except (ValueError, TypeError):
-            return
-        
-        # Check if update is needed
-        if localVersion == repoVersion:
-            return
-        
-    except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, Exception):
-        return
-    
-    # Show update details and confirm
-    fixes = "\n".join(newDetails.get("fix", []))
-    added = "\n".join(newDetails.get("add", []))
-    
-    # Use your existing alert function for confirmation
-    alert([f"{fixes}", f"{added}"], title="Confirm update:", headings=["Fixes", "Added"])
-    
-    
-    # Create and show update UI
-    ui = UpdateUI()
-    
+def runUpdateProcess(ui, exePath, repoVersion):
     try:
         ui.addDetail("Starting update process...")
         ui.updateStatus("Initializing...", 0)
-        
-        # Get the actual executable path
-        if getattr(sys, 'frozen', False):
-            currentExePath = sys.executable
-        else:
-            currentExePath = os.path.abspath(sys.argv[0])
-        
-        ui.addDetail(f"Current file: {currentExePath}")
-        
-        # Create backup
-        ui.updateStatus("Creating backup...", 10)
-        backupPath = currentExePath + ".backup"
+
+        # Backup
+        backupPath = exePath + ".backup"
         try:
-            shutil.copy2(currentExePath, backupPath)
+            shutil.copy2(exePath, backupPath)
             ui.addDetail(f"Backup created: {backupPath}")
         except Exception as e:
             ui.addDetail(f"Warning: Could not create backup: {str(e)}")
-        
-        # Download new version
+
+        # Download
         ui.updateStatus("Downloading new version...", 20)
-        downloadUrl = "https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow.exe"
-        
-        # Create temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix='.exe') as tempFile:
             tempPath = tempFile.name
-        
-        ui.addDetail(f"Downloading to: {tempPath}")
-        
-        # Download with progress
+
+        downloadUrl = "https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow.exe"
         downloadSuccess = downloadWithProgress(downloadUrl, tempPath, ui)
-        
         if not downloadSuccess:
-            try:
-                os.unlink(tempPath)
-            except:
-                pass
+            try: os.unlink(tempPath)
+            except: pass
             ui.addDetail("Update failed: Download error")
             return
-        
-        ui.updateStatus("Download completed", 60)
-        ui.addDetail("Download completed successfully")
-        
-        # Verify download
-        ui.updateStatus("Verifying download...", 70)
-        if not os.path.exists(tempPath) or os.path.getsize(tempPath) < 1024:
-            ui.addDetail("Error: Downloaded file is invalid")
-            return
-        
-        ui.addDetail(f"Downloaded file size: {os.path.getsize(tempPath)} bytes")
-        
-        # Replace current executable
+
+        # Replace exe
         ui.updateStatus("Installing update...", 80)
-        ui.addDetail("Replacing executable...")
-        
+        tempOldPath = exePath + ".old"
+        if os.path.exists(tempOldPath):
+            os.unlink(tempOldPath)
+        os.rename(exePath, tempOldPath)
+        shutil.move(tempPath, exePath)
         try:
-            # Windows specific replacement
-            ui.updateStatus("Preparing file replacement...", 82)
-            tempCurrentPath = currentExePath + ".old"
-            if os.path.exists(tempCurrentPath):
-                os.unlink(tempCurrentPath)
-            
-            ui.updateStatus("Renaming current executable...", 85)
-            os.rename(currentExePath, tempCurrentPath)
-            ui.addDetail("Current executable renamed")
-            
-            ui.updateStatus("Installing new executable...", 87)
-            shutil.move(tempPath, currentExePath)
-            ui.addDetail("New executable installed")
-            
-            # Clean up old file
-            ui.updateStatus("Cleaning up...", 89)
-            try:
-                os.unlink(tempCurrentPath)
-                ui.addDetail("Old file cleaned up")
-            except:
-                pass
-                
-            ui.addDetail("Executable replaced successfully")
-            
-        except Exception as e:
-            ui.addDetail(f"Error replacing executable: {str(e)}")
-            # Try to restore backup
-            if os.path.exists(backupPath):
-                try:
-                    shutil.copy2(backupPath, currentExePath)
-                    ui.addDetail("Backup restored")
-                except:
-                    ui.addDetail("Failed to restore backup")
-            return
-        
-        # Update version setting
-        ui.updateStatus("Finalizing...", 90)
-        try:
-            setSetting("version", repoVersion)
-            ui.addDetail(f"Version updated to: {repoVersion}")
-        except Exception as e:
-            ui.addDetail(f"Warning: Could not update version setting: {str(e)}")
-        
+            os.unlink(tempOldPath)
+        except:
+            pass
+
+        setSetting("version", repoVersion)
+        ui.addDetail(f"Version updated to: {repoVersion}")
+
         ui.updateStatus("Update completed! Launching...", 100)
-        ui.addDetail("Update completed successfully!")
-        ui.addDetail("Launching TaskFlow...")
-        
-        time.sleep(1)
-        
-        # Launch TaskFlow and exit
-        try:
-            subprocess.Popen([currentExePath], shell=False, cwd=os.path.dirname(currentExePath))
-            ui.addDetail("TaskFlow launched successfully")
-            time.sleep(0.5)
-            ui.root.quit()
-            sys.exit(0)
-            
-        except Exception as e:
-            ui.addDetail(f"Error launching TaskFlow: {str(e)}")
-            time.sleep(2)
-            ui.root.quit()
-        
+        ui.root.after(1000, lambda: launchTaskFlow(ui, exePath))
+
     except Exception as e:
         ui.addDetail(f"Update failed: {str(e)}")
         ui.updateStatus("Update failed", 0)
-        time.sleep(2)
-        ui.root.quit()
-    
-    # Show UI during process
-    ui.root.mainloop()
-    
-    
+
+
+def launchTaskFlow(ui, exePath):
+    try:
+        subprocess.Popen([exePath], shell=False, cwd=os.path.dirname(exePath))
+        ui.addDetail("TaskFlow launched successfully")
+    except Exception as e:
+        ui.addDetail(f"Error launching TaskFlow: {str(e)}")
+    finally:
+        ui.root.destroy()
+
+
+def updateWindows():
+    try:
+        localVersion = getSetting("version")
+        repoUrl = "https://raw.githubusercontent.com/Vic-Nas/TaskFlow/main/data/settings.json"
+        with urllib.request.urlopen(repoUrl, timeout=10) as response:
+            repoSettings = json.loads(response.read().decode('utf-8'))
+        repoVersion = int(repoSettings.get("version"))
+        newDetails = repoSettings.get("new", {})
+
+        if localVersion == repoVersion:
+            subprocess.Popen([os.path.abspath("TaskFlow.exe")], shell=False)
+            return
+
+        fixes = "\n".join(newDetails.get("fix", []))
+        added = "\n".join(newDetails.get("add", []))
+        alert([fixes, added], title="Confirm update:", headings=["Fixes", "Added"])
+
+        exePath = os.path.abspath("TaskFlow.exe")
+        ui = UpdateUI()
+        threading.Thread(target=runUpdateProcess, args=(ui, exePath, repoVersion), daemon=True).start()
+        ui.root.mainloop()
+
+    except Exception as e:
+        print(f"Update check failed: {e}")
+        subprocess.Popen([os.path.abspath("TaskFlow.exe")], shell=False)
+
+
 updateWindows()

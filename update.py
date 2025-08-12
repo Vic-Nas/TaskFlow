@@ -1,18 +1,35 @@
-import threading
 import sys
-import subprocess
 import os
-import tkinter as tk
-from tkinter import ttk
-import time
+import ctypes
+import urllib.request
 from imports.settings import getSetting, setSetting
 from imports.utils import alert
-import urllib.request
+import threading
 import json
 import shutil
 import tempfile
+import tkinter as tk
+from tkinter import ttk
+import subprocess
+import time
+
+# --------------------
+# Admin rights check
+# --------------------
+def runAsAdmin():
+    if ctypes.windll.shell32.IsUserAnAdmin():
+        return True
+    else:
+        params = " ".join([f'"{arg}"' for arg in sys.argv])
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, None, 1)
+        sys.exit()
+
+runAsAdmin()
 
 
+# --------------------
+# Update UI
+# --------------------
 class UpdateUI:
     def __init__(self):
         self.root = tk.Tk()
@@ -20,7 +37,6 @@ class UpdateUI:
         self.root.geometry("400x250")
         self.root.resizable(False, False)
 
-        # Center window
         self.root.update_idletasks()
         x = (self.root.winfo_screenwidth() // 2) - (400 // 2)
         y = (self.root.winfo_screenheight() // 2) - (250 // 2)
@@ -58,13 +74,15 @@ class UpdateUI:
         self.root.update()
 
 
+# --------------------
+# Download helper
+# --------------------
 def downloadWithProgress(url, filename, ui):
     def progressHook(blockNum, blockSize, totalSize):
         if totalSize > 0:
             downloaded = blockNum * blockSize
             percent = min(100, (downloaded * 100) // totalSize)
             ui.updateStatus(f"Downloading... {percent}%", 20 + (percent * 0.4))
-
     try:
         urllib.request.urlretrieve(url, filename, progressHook)
         return True
@@ -73,7 +91,10 @@ def downloadWithProgress(url, filename, ui):
         return False
 
 
-def runUpdateProcess(ui, exePath, repoVersion):
+# --------------------
+# Actual update process
+# --------------------
+def runUpdateProcess(ui, exePath, repoVersion, downloadUrl):
     try:
         ui.addDetail("Starting update process...")
         ui.updateStatus("Initializing...", 0)
@@ -91,11 +112,12 @@ def runUpdateProcess(ui, exePath, repoVersion):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.exe') as tempFile:
             tempPath = tempFile.name
 
-        downloadUrl = "https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow.exe"
         downloadSuccess = downloadWithProgress(downloadUrl, tempPath, ui)
         if not downloadSuccess:
-            try: os.unlink(tempPath)
-            except: pass
+            try:
+                os.unlink(tempPath)
+            except:
+                pass
             ui.addDetail("Update failed: Download error")
             return
 
@@ -122,6 +144,9 @@ def runUpdateProcess(ui, exePath, repoVersion):
         ui.updateStatus("Update failed", 0)
 
 
+# --------------------
+# Launch TaskFlow
+# --------------------
 def launchTaskFlow(ui, exePath):
     try:
         subprocess.Popen([exePath], shell=False, cwd=os.path.dirname(exePath))
@@ -132,6 +157,9 @@ def launchTaskFlow(ui, exePath):
         ui.root.destroy()
 
 
+# --------------------
+# Main updater logic
+# --------------------
 def updateWindows():
     try:
         localVersion = getSetting("version")
@@ -149,9 +177,21 @@ def updateWindows():
         added = "\n".join(newDetails.get("add", []))
         alert([fixes, added], title="Confirm update:", headings=["Fixes", "Added"])
 
+        # Corrected download path
+        downloadUrl = "https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow/TaskFlow.exe"
+
+        # Pre-check: make sure file exists
+        try:
+            with urllib.request.urlopen(downloadUrl) as checkResp:
+                if checkResp.status != 200:
+                    raise Exception(f"Server returned {checkResp.status}")
+        except Exception as e:
+            print(f"Update file check failed: {e}")
+            return
+
         exePath = os.path.abspath("TaskFlow.exe")
         ui = UpdateUI()
-        threading.Thread(target=runUpdateProcess, args=(ui, exePath, repoVersion), daemon=True).start()
+        threading.Thread(target=runUpdateProcess, args=(ui, exePath, repoVersion, downloadUrl), daemon=True).start()
         ui.root.mainloop()
 
     except Exception as e:

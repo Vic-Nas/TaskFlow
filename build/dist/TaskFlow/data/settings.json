@@ -1,14 +1,12 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 13,
+    "version": 14,
     "new": {
         "fix": [
-            "Save unchanged tasks."
+            "Displaying deleted group."
         ],
-        "add": [
-            "Add update loading window."
-        ]
+        "add": []
     },
     "niceUser": true
 }

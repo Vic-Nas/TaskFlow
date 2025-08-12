@@ -96,37 +96,38 @@ def onClick(buttonText, task=None):
                 print("Buying coffee")
                 
             case "Select Group":
-                # FIX: Check if selection exists and handle filtering
                 selection = tasksListBox.curselection()
                 if not selection:
-                    return
-                
-                # Get filtered list for correct index mapping
+                    if len(taskGroups) > 0:
+                        tasksListBox.selection_set(0)
+                        selection = (0,)
+                    else:
+                        return
+
                 goodGroup = lambda group: group.title.startswith(searchEntryVar.get())
                 filteredGroups = list(filter(goodGroup, taskGroups))
-                
+
                 if selection[0] >= len(filteredGroups):
                     return
-                    
+
                 for widget in chosenGroupFrame.winfo_children():
                     widget.destroy()
-                    
+
                 selectedGroup = filteredGroups[selection[0]]
                 size = len(selectedGroup.tasks)
                 start = displayStartIndex
-                
+
                 if size <= MAX_ITEMS:
                     start = 0
                 elif start > size - MAX_ITEMS:
-                    # FIX: Prevent negative start
                     start = max(0, size - MAX_ITEMS)
-                    
+
                 displayStartIndex = start
                 displaySelected(
-                    leftUp=start, 
+                    leftUp=start,
                     leftDown=max(0, size - start - MAX_ITEMS)
                 )
-
+            
             case "Import Group":
                 filePath = filedialog.askopenfilename(
                     title="Choose .task file",
@@ -198,6 +199,7 @@ def onClick(buttonText, task=None):
                             loadGroups()
                         except Exception as e:
                             alert(f"Error deleting group: {e}")
+                    onClick("Select Group")
 
             case "DoubleClick Group":
                 if not selectedGroup:

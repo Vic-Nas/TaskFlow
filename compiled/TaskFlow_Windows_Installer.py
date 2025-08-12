@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import os
 import sys
 import shutil
@@ -8,207 +7,201 @@ import subprocess
 from pathlib import Path
 import urllib.request
 import ctypes
+import tkinter as tk
+from tkinter import ttk
+import threading
 
-def is_admin():
+
+# --------------------
+# Admin rights check
+# --------------------
+def runAsAdmin():
     try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
+        if ctypes.windll.shell32.IsUserAnAdmin():
+            return True
     except:
-        return False
+        pass
+    params = " ".join([f'"{arg}"' for arg in sys.argv])
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, None, 1)
+    sys.exit()
 
-def run_as_admin():
-    if is_admin():
-        return True
-    else:
-        print("Administrator rights required. Restarting as administrator...")
-        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
-        return False
 
-def create_desktop_shortcut(exe_path):
+# --------------------
+# UI Class
+# --------------------
+class InstallUI:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("TaskFlow Installer")
+        self.root.geometry("500x300")
+        self.root.resizable(False, False)
+
+        self.root.update_idletasks()
+        x = (self.root.winfo_screenwidth() // 2) - (500 // 2)
+        y = (self.root.winfo_screenheight() // 2) - (300 // 2)
+        self.root.geometry(f"500x300+{x}+{y}")
+
+        self.setupUI()
+
+    def setupUI(self):
+        mainFrame = ttk.Frame(self.root, padding="20")
+        mainFrame.pack(fill=tk.BOTH, expand=True)
+
+        titleLabel = ttk.Label(mainFrame, text="Installing TaskFlow", font=("Arial", 14, "bold"))
+        titleLabel.pack(pady=(0, 20))
+
+        self.statusLabel = ttk.Label(mainFrame, text="Preparing installation...", font=("Arial", 10))
+        self.statusLabel.pack(pady=(0, 10))
+
+        self.progressBar = ttk.Progressbar(mainFrame, mode='determinate', length=400)
+        self.progressBar.pack(pady=(0, 20))
+
+        self.detailsText = tk.Text(mainFrame, height=8, width=60, wrap=tk.WORD, state=tk.DISABLED)
+        self.detailsText.pack()
+
+    def updateStatus(self, text, progressValue=None):
+        self.statusLabel.config(text=text)
+        if progressValue is not None:
+            self.progressBar['value'] = progressValue
+        self.root.update()
+
+    def addDetail(self, text):
+        self.detailsText.config(state=tk.NORMAL)
+        self.detailsText.insert(tk.END, text + "\n")
+        self.detailsText.see(tk.END)
+        self.detailsText.config(state=tk.DISABLED)
+        self.root.update()
+
+
+# --------------------
+# Installer helpers
+# --------------------
+def createDesktopShortcut(exePath, ui):
     try:
         desktop = Path.home() / "Desktop"
-        shortcut_path = desktop / "TaskFlow.lnk"
-        
-        ps_command = f'''
+        shortcutPath = desktop / "TaskFlow.lnk"
+        psCommand = f'''
 $WshShell = New-Object -comObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut("{shortcut_path}")
-$Shortcut.TargetPath = "{exe_path}"
-$Shortcut.WorkingDirectory = "{exe_path.parent}"
+$Shortcut = $WshShell.CreateShortcut("{shortcutPath}")
+$Shortcut.TargetPath = "{exePath}"
+$Shortcut.WorkingDirectory = "{exePath.parent}"
 $Shortcut.Save()
 '''
-        
-        result = subprocess.run(["powershell", "-Command", ps_command], capture_output=True, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
-        
-        if result.returncode == 0:
-            print("Desktop shortcut created.")
-        else:
-            print("Failed to create desktop shortcut.")
-            
+        subprocess.run(["powershell", "-Command", psCommand], capture_output=True, text=True,
+                       creationflags=subprocess.CREATE_NO_WINDOW)
+        ui.addDetail("Desktop shortcut created.")
     except Exception as e:
-        print(f"Shortcut creation error: {e}")
+        ui.addDetail(f"Shortcut creation error: {e}")
 
-def create_uninstaller(install_path):
+
+def createUninstaller(installPath, ui):
     try:
-        # Create simple batch uninstaller
-        batch_content = f'''@echo off
+        batchContent = f'''@echo off
 echo TaskFlow Uninstaller
-echo ====================
-echo.
-echo This will completely remove TaskFlow from your system.
-pause
-echo.
-echo Removing TaskFlow...
-
-:: Request admin rights
 net session >nul 2>&1
 if not %errorLevel% == 0 (
-    echo Administrator rights required.
     powershell -Command "Start-Process '%~f0' -Verb RunAs"
     exit
 )
-
-:: Remove installation directory
-if exist "{install_path}" (
-    rmdir /s /q "{install_path}"
-    echo TaskFlow removed successfully.
-) else (
-    echo TaskFlow installation not found.
+if exist "{installPath}" (
+    rmdir /s /q "{installPath}"
 )
-
-:: Remove desktop shortcut
 if exist "%USERPROFILE%\\Desktop\\TaskFlow.lnk" (
     del "%USERPROFILE%\\Desktop\\TaskFlow.lnk"
-    echo Desktop shortcut removed.
 )
-
-echo.
-echo Uninstallation completed.
 pause
 '''
-        
-        batch_path = install_path / "uninstall.bat"
-        with open(batch_path, 'w') as f:
-            f.write(batch_content)
-        
-        print("Uninstaller created.")
-        
+        batchPath = installPath / "uninstall.bat"
+        with open(batchPath, 'w') as f:
+            f.write(batchContent)
+        ui.addDetail("Uninstaller created.")
     except Exception as e:
-        print(f"Uninstaller creation error: {e}")
+        ui.addDetail(f"Uninstaller creation error: {e}")
 
-def main():
-    print("=" * 50)
-    print("TaskFlow Installer")
-    print("=" * 50)
-    
-    if not run_as_admin():
-        return
-    
-    # Create temp directory
-    temp_dir = tempfile.mkdtemp()
-    
+
+def downloadWithProgress(url, destination, ui):
     try:
-        zip_url = "https://github.com/Vic-Nas/TaskFlow/raw/main/compiled/win/TaskFlow.zip"
-        zip_path = Path(temp_dir) / "TaskFlow.zip"
-        extract_path = Path(temp_dir) / "extracted"
-        
-        # Download
-        print("Downloading TaskFlow.zip...")
-        
-        def download_with_progress(url, destination):
-            try:
-                response = urllib.request.urlopen(url)
-                total_size = int(response.headers.get('Content-Length', 0))
-                
-                if total_size > 0:
-                    print(f"File size: {total_size / (1024*1024):.1f} MB")
-                
-                downloaded = 0
-                chunk_size = 8192
-                
-                with open(destination, 'wb') as f:
-                    while True:
-                        chunk = response.read(chunk_size)
-                        if not chunk:
-                            break
-                        f.write(chunk)
-                        downloaded += len(chunk)
-                        
-                        if total_size > 0:
-                            progress = (downloaded / total_size) * 100
-                            print(f"\rProgress: {progress:.1f}% ({downloaded / (1024*1024):.1f} MB)", end='', flush=True)
-                        else:
-                            print(f"\rDownloaded: {downloaded / (1024*1024):.1f} MB", end='', flush=True)
-                
-                print()  # New line after progress
-                return True
-                
-            except Exception as e:
-                print(f"Download error: {e}")
-                return False
-        
-        if not download_with_progress(zip_url, zip_path):
-            print("Download failed!")
-            return
-        
-        # Extract
-        print("Extracting...")
-        extract_path.mkdir()
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(extract_path)
-        
-        # Check extraction
-        files = list(extract_path.rglob("*"))
-        print(f"Extracted {len(files)} items")
-        
-        # Installation
-        program_files = Path(os.environ.get('PROGRAMFILES', 'C:\\Program Files'))
-        install_dir = program_files / "TaskFlow"
-        
-        if install_dir.exists():
-            shutil.rmtree(install_dir)
-        
-        install_dir.mkdir(parents=True)
-        
-        # Copy files
-        print("Installing files...")
-        for item in extract_path.rglob("*"):
-            if item.is_file():
-                rel_path = item.relative_to(extract_path)
-                dest = install_dir / rel_path
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(item, dest)
-        
-        # Find update.exe first, fallback to TaskFlow.exe
-        update_exe = install_dir / "update.exe"
-        taskflow_exe = install_dir / "TaskFlow.exe"
-        
-        target_exe = None
-        if update_exe.exists():
-            target_exe = update_exe
-            print(f"Found update executable: {update_exe}")
-        elif taskflow_exe.exists():
-            target_exe = taskflow_exe
-            print(f"Found TaskFlow executable: {taskflow_exe}")
-        else:
-            # Look for any exe files
-            exe_files = list(install_dir.glob("*.exe"))
-            if exe_files:
-                target_exe = exe_files[0]
-                print(f"Found executable: {target_exe}")
-        
-        if target_exe:
-            create_desktop_shortcut(target_exe)
-            create_uninstaller(install_dir)
-            print("Installation completed successfully!")
-            print(f"Desktop shortcut points to: {target_exe.name}")
-        else:
-            print("ERROR: No executable found!")
-            
+        response = urllib.request.urlopen(url)
+        totalSize = int(response.headers.get('Content-Length', 0))
+        downloaded = 0
+        chunkSize = 8192
+        with open(destination, 'wb') as f:
+            while True:
+                chunk = response.read(chunkSize)
+                if not chunk:
+                    break
+                f.write(chunk)
+                downloaded += len(chunk)
+                if totalSize > 0:
+                    percent = (downloaded / totalSize) * 100
+                    ui.updateStatus(f"Downloading... {percent:.1f}%", percent * 0.5)
+        ui.addDetail("Download completed.")
+        return True
     except Exception as e:
-        print(f"Error: {e}")
+        ui.addDetail(f"Download error: {e}")
+        return False
+
+
+# --------------------
+# Installation process
+# --------------------
+def runInstallation(ui):
+    tempDir = tempfile.mkdtemp()
+    try:
+        zipUrl = "https://github.com/Vic-Nas/TaskFlow/raw/main/compiled/win/TaskFlow.zip"
+        zipPath = Path(tempDir) / "TaskFlow.zip"
+        extractPath = Path(tempDir) / "extracted"
+
+        ui.updateStatus("Downloading package...", 0)
+        if not downloadWithProgress(zipUrl, zipPath, ui):
+            return
+
+        ui.updateStatus("Extracting files...", 60)
+        extractPath.mkdir()
+        with zipfile.ZipFile(zipPath, 'r') as zipRef:
+            zipRef.extractall(extractPath)
+        ui.addDetail(f"Extracted {len(list(extractPath.rglob('*')))} items.")
+
+        ui.updateStatus("Installing...", 80)
+        programFiles = Path(os.environ.get('PROGRAMFILES', 'C:\\Program Files'))
+        installDir = programFiles / "TaskFlow"
+        if installDir.exists():
+            shutil.rmtree(installDir)
+        shutil.copytree(extractPath, installDir)
+        ui.addDetail(f"Installed to: {installDir}")
+
+        exeFile = None
+        for candidate in [installDir / "update.exe", installDir / "TaskFlow.exe"]:
+            if candidate.exists():
+                exeFile = candidate
+                break
+        if not exeFile:
+            exes = list(installDir.glob("*.exe"))
+            if exes:
+                exeFile = exes[0]
+
+        if exeFile:
+            createDesktopShortcut(exeFile, ui)
+            createUninstaller(installDir, ui)
+            ui.addDetail("Installation completed successfully!")
+        else:
+            ui.addDetail("No executable found after installation.")
+
+        ui.updateStatus("Done!", 100)
+
     finally:
-        shutil.rmtree(temp_dir, ignore_errors=True)
-    
-    input("Press Enter to exit...")
+        shutil.rmtree(tempDir, ignore_errors=True)
+
+
+# --------------------
+# Main
+# --------------------
+def main():
+    runAsAdmin()
+    ui = InstallUI()
+    threading.Thread(target=runInstallation, args=(ui,), daemon=True).start()
+    ui.root.mainloop()
+
 
 if __name__ == "__main__":
     main()

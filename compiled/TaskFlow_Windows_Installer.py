@@ -177,18 +177,29 @@ def main():
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(item, dest)
         
-        # Find exe
+        # Find update.exe first, fallback to TaskFlow.exe
+        update_exe = install_dir / "update.exe"
         taskflow_exe = install_dir / "TaskFlow.exe"
-        if not taskflow_exe.exists():
+        
+        target_exe = None
+        if update_exe.exists():
+            target_exe = update_exe
+            print(f"Found update executable: {update_exe}")
+        elif taskflow_exe.exists():
+            target_exe = taskflow_exe
+            print(f"Found TaskFlow executable: {taskflow_exe}")
+        else:
+            # Look for any exe files
             exe_files = list(install_dir.glob("*.exe"))
             if exe_files:
-                taskflow_exe = exe_files[0]
+                target_exe = exe_files[0]
+                print(f"Found executable: {target_exe}")
         
-        if taskflow_exe.exists():
-            print(f"Found executable: {taskflow_exe}")
-            create_desktop_shortcut(taskflow_exe)
+        if target_exe:
+            create_desktop_shortcut(target_exe)
             create_uninstaller(install_dir)
             print("Installation completed successfully!")
+            print(f"Desktop shortcut points to: {target_exe.name}")
         else:
             print("ERROR: No executable found!")
             

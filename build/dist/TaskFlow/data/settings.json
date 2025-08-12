@@ -1,7 +1,7 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 7,
+    "version": 8,
     "new": {
         "fix": [
             "Save unchanged tasks."

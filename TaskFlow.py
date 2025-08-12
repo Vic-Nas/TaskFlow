@@ -144,18 +144,14 @@ def ensureAdminExecutable():
                 os.execvp("pkexec", ["pkexec", exePath] + sys.argv[1:])
             except FileNotFoundError:
                 os.execvp("sudo", ["sudo", exePath] + sys.argv[1:])
-
+                
 
 # Detect if running as script or executable
 fileName = os.path.basename(sys.argv[0])
 
 if not fileName.lower().endswith('.py'):
     ensureAdminExecutable()
-    try:
-        updateName = "update" + platform.system()
-        exec(f"from imports.utils import {updateName};{updateName}()")
-    except Exception as e:
-        alert(f"Update unavailable:\n{e}")
+
 else:
     ensureAdminScript()
     message = "Auto update disabled when running with Python.\n"
@@ -163,6 +159,8 @@ else:
     alert(message)
     manager = ConsoleWindowManager()
     manager.minimizeWindow()
+
+
 
 import traceback
 

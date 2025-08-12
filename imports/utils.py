@@ -56,10 +56,8 @@ def updateWindows():
     fixes = "\n".join(newDetails["fix"])
     added = "\n".join(newDetails["add"])
     
-    # Show update confirmation - keeping your original alert function
+    # Show update info with your alert function - no choice, just proceed
     alert([f"{fixes}", f"{added}"], title="Confirm update:", headings=["Fixes", "Added"])
-    
-    # Remove the confirmation check - just proceed with update
     
     # NOW show loading window during the actual update process
     import tkinter as tk
@@ -199,6 +197,7 @@ del "%~0"
     
     # Show loading window (this will block until window is destroyed)
     loadingWindow.mainloop()
+    
 
 def centerWin(window):
     window.update_idletasks()

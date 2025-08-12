@@ -158,51 +158,152 @@ class SimpleCircleOverlay:
                                outline="", fill="", tags="circle")
 
     def performWebOcr(self, imagePath):
-        """Ultra-lightweight web OCR using built-in urllib only"""
+        """Ultra-lightweight web OCR with multiple free services"""
+        print(f"Starting OCR on image: {imagePath}")
+        
+        # Try multiple free OCR services
+        services = [
+            ('OCR.space (with API key)', self._tryOcrSpaceWithKey),
+            ('OCR.space (no key)', self._tryOcrSpaceNoKey),
+            ('Base64 OCR Service', self._tryBase64Ocr),
+        ]
+        
+        for service_name, service_func in services:
+            try:
+                print(f"Trying {service_name}...")
+                result = service_func(imagePath)
+                if result:
+                    print(f"✓ {service_name} found text: {result[:100]}...")
+                    return result
+                else:
+                    print(f"✗ {service_name} - no text found")
+            except Exception as e:
+                print(f"✗ {service_name} error: {e}")
+        
+        print("All OCR services failed or found no text")
+        return ""
+
+    def _tryOcrSpaceWithKey(self, imagePath):
+        """Try OCR.space with proper headers and free API key"""
         try:
-            # Read and encode image
+            file_size = os.path.getsize(imagePath)
+            print(f"Image size: {file_size} bytes")
+            
             with open(imagePath, 'rb') as img_file:
                 img_data = base64.b64encode(img_file.read()).decode()
             
-            # Use OCR.space free API
+            # Use OCR.space with proper headers
             url = 'https://api.ocr.space/parse/image'
             data = {
                 'base64Image': f'data:image/png;base64,{img_data}',
                 'language': 'eng',
-                'isOverlayRequired': 'false',
+                'apikey': 'helloworld',  # Free demo key
+                'OCREngine': '2',
                 'scale': 'true',
-                'OCREngine': '2'
+                'isTable': 'false'
             }
             
-            # Create request
             postdata = urlencode(data).encode()
             request = Request(url, postdata)
             request.add_header('Content-Type', 'application/x-www-form-urlencoded')
+            request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
             
-            # Make request with timeout
+            response = urlopen(request, timeout=20)
+            result = json.loads(response.read().decode())
+            
+            return self._parseOcrResult(result)
+            
+        except Exception as e:
+            print(f"OCR.space with key error: {e}")
+            return ""
+
+    def _tryOcrSpaceNoKey(self, imagePath):
+        """Try OCR.space without API key but with better headers"""
+        try:
+            with open(imagePath, 'rb') as img_file:
+                img_data = base64.b64encode(img_file.read()).decode()
+            
+            url = 'https://api.ocr.space/parse/image'
+            data = {
+                'base64Image': f'data:image/png;base64,{img_data}',
+                'language': 'eng',
+                'OCREngine': '1',
+                'scale': 'true'
+            }
+            
+            postdata = urlencode(data).encode()
+            request = Request(url, postdata)
+            request.add_header('Content-Type', 'application/x-www-form-urlencoded')
+            request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
+            request.add_header('Accept', 'application/json, text/plain, */*')
+            request.add_header('Accept-Language', 'en-US,en;q=0.9')
+            request.add_header('Referer', 'https://ocr.space/')
+            
             response = urlopen(request, timeout=15)
             result = json.loads(response.read().decode())
             
-            # Parse results
-            if result.get('ParsedResults') and len(result['ParsedResults']) > 0:
-                parsed_text = result['ParsedResults'][0].get('ParsedText', '').strip()
-                
-                if parsed_text and not parsed_text.isdigit():
-                    # Clean up text and format like original
-                    lines = [line.strip() for line in parsed_text.split('\n') if line.strip()]
-                    text_results = []
-                    
-                    for line in lines:
-                        if line and not line.isdigit() and len(line) > 1:
-                            text_results.append(f"{line},90")  # Use 90% confidence
-                    
-                    return "+".join(text_results)
+            return self._parseOcrResult(result)
+            
+        except Exception as e:
+            print(f"OCR.space no key error: {e}")
+            return ""
+
+    def _tryBase64Ocr(self, imagePath):
+        """Try alternative free OCR service"""
+        try:
+            with open(imagePath, 'rb') as img_file:
+                img_data = base64.b64encode(img_file.read()).decode()
+            
+            # Try alternative service
+            url = 'https://script.google.com/macros/s/AKfycbyd5AcbAnWi2Yn0xhFRbyzS7Gp2YA_8zQVJCfjS-4eFQR-OIGgAJWU/exec'
+            
+            data = {
+                'image': img_data,
+                'type': 'png'
+            }
+            
+            postdata = json.dumps(data).encode()
+            request = Request(url, postdata)
+            request.add_header('Content-Type', 'application/json')
+            request.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+            
+            response = urlopen(request, timeout=15)
+            result = json.loads(response.read().decode())
+            
+            if 'text' in result and result['text']:
+                text = result['text'].strip()
+                if text:
+                    return f"{text},85"
             
             return ""
             
         except Exception as e:
-            print(f"Web OCR error: {e}")
+            print(f"Base64 OCR error: {e}")
             return ""
+
+    def _parseOcrResult(self, result):
+        """Parse OCR.space API result"""
+        if result.get('ParsedResults') and len(result['ParsedResults']) > 0:
+            parsed_result = result['ParsedResults'][0]
+            parsed_text = parsed_result.get('ParsedText', '').strip()
+            error_message = parsed_result.get('ErrorMessage', '')
+            
+            if error_message:
+                print(f"OCR API reported error: {error_message}")
+                return ""
+            
+            if parsed_text:
+                lines = [line.strip() for line in parsed_text.split('\n') if line.strip()]
+                text_results = []
+                
+                for line in lines:
+                    if line and len(line.strip()) > 0:
+                        if not (line.strip().isdigit() and len(line.strip()) < 4):
+                            text_results.append(f"{line.strip()},90")
+                
+                return "+".join(text_results)
+        
+        return ""
 
     def captureAndOcr(self):
         """Capture area and perform lightweight web OCR"""
@@ -211,6 +312,8 @@ class SimpleCircleOverlay:
                 print("Cannot capture screenshot - pyautogui not available")
                 return ""
                 
+            print(f"Capturing OCR region around ({self.x}, {self.y}) with radius {self.wantClickInfo}")
+            
             # Hide overlay temporarily
             self.root.withdraw()
             

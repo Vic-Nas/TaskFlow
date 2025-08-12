@@ -159,10 +159,11 @@ def onClick(buttonText, task=None):
                     times = int(times_str)
                     if times <= 0:
                         raise ValueError("Times must be positive")
+                    
                         
                     for _ in range(times):
                         for task in selectedGroup.tasks:
-                            task.run()
+                            task["run"].invoke()
                             
                 except pyautogui.FailSafeException:
                     print("Failsafe activated - TaskFlow will exit")
@@ -214,7 +215,7 @@ def onClick(buttonText, task=None):
                 try:
                     if overlay:
                         overlay.closeApp()
-                    overlay = SimpleCircleOverlay(screenshotPath="screenshot.jpg", screenshotPathCircle="screenshotC.jpg", wantClickInfo=100)
+                    overlay = SimpleCircleOverlay(screenshotPath="screenshot.jpg", screenshotPathCircle="screenshotC.jpg", wantClickInfo=75)
                     root.withdraw()
                     X, Y, moved, desc = overlay.run()
                     root.deiconify()
@@ -262,9 +263,15 @@ def onClick(buttonText, task=None):
                 if not task:
                     return
                 try:
-                    # FIX: Safe access to task dictionary
+                    # Ask user if they want to save changes
                     if "save" in task:
-                        task["save"].invoke()
+                        save_response = tkinter.messagebox.askyesno(
+                            "Save Changes", 
+                            f"Save changes in {task.desc}?"
+                        )
+                        if save_response:
+                            task["save"].invoke()
+                    
                     root.withdraw()
                     task.run()
                     root.deiconify()
@@ -309,6 +316,7 @@ def onClick(buttonText, task=None):
                     # Safe button color update
                     if "save" in task:
                         task["save"].config(bg="#2196F3")
+                        task["changed"] = False
 
                 except Exception as e:
                     alert(f"Error saving task: {e}")
@@ -398,6 +406,7 @@ def onClick(buttonText, task=None):
                 if task and "save" in task:
                     try:
                         task["save"].config(bg="red")
+                        task["changed"] = True
                     except Exception as e:
                         print(f"Error updating save button color: {e}")
 
@@ -981,7 +990,8 @@ def displaySelected(leftUp = 0, leftDown = 0):
                 "commandMenuVar": commandMenuVar,
                 "argsEntryVar": argsEntryVar,
                 "descEntryVar": descEntryVar,
-                "timesEntryVar": timesEntryVar
+                "timesEntryVar": timesEntryVar,
+                "changed": False
             }
         )
 

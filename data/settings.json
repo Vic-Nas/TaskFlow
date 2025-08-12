@@ -1,11 +1,13 @@
 {
-    "email": "@",
+    "email": "",
     "coloredLogs": false,
-    "version": 24,
+    "version": 25,
     "new": {
-        "fix": [],
+        "fix": [
+            "No click Info."
+        ],
         "add": [
-            "Button text detection."
+            "Ask if changes should be saved."
         ]
     },
     "niceUser": true

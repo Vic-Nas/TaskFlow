@@ -1,13 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
-
 echo ====================================
-echo TaskFlow Build and Deployment Script
+echo TaskFlow Build Script (No ZIP)
 echo ====================================
 
 :: Step 1: Run python build.py
 echo.
-echo [1/4] Running python build.py...
+echo [1/3] Running python build.py...
 python build.py
 if !errorlevel! neq 0 (
     echo ERROR: Failed to run python build.py
@@ -18,7 +17,7 @@ echo Python build completed successfully.
 
 :: Step 2: Clean the build/dist/TaskFlow folder
 echo.
-echo [2/4] Cleaning build/dist/TaskFlow folder...
+echo [2/3] Cleaning build/dist/TaskFlow folder...
 cd build\dist\TaskFlow
 if !errorlevel! neq 0 (
     echo ERROR: Cannot access build/dist/TaskFlow folder
@@ -46,9 +45,9 @@ echo Cleanup completed.
 :: Return to root directory
 cd ..\..\..
 
-:: Step 3: Create ZIP file
+:: Step 3: Prepare release folder structure
 echo.
-echo [3/4] Creating ZIP file...
+echo [3/3] Preparing release structure...
 
 :: Check if compiled/win folder exists, create if not
 if not exist "compiled\win" (
@@ -56,32 +55,36 @@ if not exist "compiled\win" (
     mkdir "compiled\win"
 )
 
-:: Delete old ZIP if it exists
-if exist "compiled\win\TaskFlow.zip" (
-    echo Removing old ZIP file...
-    del /q "compiled\win\TaskFlow.zip"
+:: Clean old compiled files
+if exist "compiled\win\TaskFlow" (
+    echo Removing old compiled folder...
+    rmdir /s /q "compiled\win\TaskFlow"
 )
 
-:: Create new ZIP (using PowerShell)
-echo Creating new ZIP file...
-powershell -command "Compress-Archive -Path 'build\dist\TaskFlow\*' -DestinationPath 'compiled\win\TaskFlow.zip' -Force"
+:: Copy build to compiled (without creating ZIP)
+echo Copying build to compiled/win/TaskFlow...
+xcopy "build\dist\TaskFlow\*" "compiled\win\TaskFlow\" /E /I /H /Y
 if !errorlevel! neq 0 (
-    echo ERROR: Failed to create ZIP file
+    echo ERROR: Failed to copy files
     pause
     exit /b 1
 )
-echo ZIP file created successfully.
 
+echo Files copied successfully.
 
 :: Step 4: Final summary
 echo.
-echo [4/4] All operations completed successfully!
+echo ====================================
+echo Build completed successfully!
 echo ====================================
 echo Summary:
 echo - Python build executed
 echo - build/dist/TaskFlow folder cleaned
-echo - ZIP file created: compiled/win/TaskFlow.zip
-echo - TaskFlow.exe copied to: !destination!
+echo - Files ready in: compiled/win/TaskFlow/
+echo - No ZIP file created (files ready for Git commit)
 echo ====================================
+echo.
+echo You can now commit the individual files to Git.
+echo The installer will download them directly from GitHub.
 echo.
 pause

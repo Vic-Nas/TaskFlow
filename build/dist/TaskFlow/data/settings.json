@@ -1,12 +1,12 @@
 {
-    "email": "",
+    "email": "@",
     "coloredLogs": false,
-    "version": 18,
+    "version": 23,
     "new": {
-        "fix": [
-            "Unsubmitted form"
-        ],
-        "add": []
+        "fix": [],
+        "add": [
+            "Button text detection."
+        ]
     },
     "niceUser": true
 }

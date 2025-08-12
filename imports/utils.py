@@ -214,22 +214,25 @@ def uploadImageToImgbb(imagePath):
         else:
             raise Exception(f"HTTP Error: {response.status_code}")
 
-def submitForm(description: str, xCoord: float, yCoord: float, imagePath: str) -> bool:
-    imageLink = uploadImageToImgbb(imagePath)
+def submitForm(description: str, xCoord: float, yCoord: float, imagePaths: tuple[str]) -> bool:
+    links = []
+    for imagePath in imagePaths:
+        imageLink = uploadImageToImgbb(imagePath)
+        links.append(imageLink)
     data = FORM_DATA.copy()
     data["entry.705277571"] = description
     data["entry.383106297"] = str(xCoord)
     data["entry.1253928474"] = str(yCoord)
-    data["entry.114537537"] = imageLink
+    data["entry.114537537"] = ",".join(links)
 
     response = requests.post(FORM_URL, data=data)
     return response.status_code == 200
 
-def submitFormAsync(description: str, xCoord: float, yCoord: float, imagePath: str):
+def submitFormAsync(description: str, xCoord: float, yCoord: float, imagePaths: tuple[str]):
     """Non-blocking version of submitForm"""
     def backgroundSubmit():
         try:
-            submitForm(description, xCoord, yCoord, imagePath)
+            submitForm(description, xCoord, yCoord, imagePaths)
         except Exception as e:
             print(f"Submit error: {e}")  # or however you want to handle errors
     

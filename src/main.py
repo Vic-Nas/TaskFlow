@@ -214,16 +214,22 @@ def onClick(buttonText, task=None):
                 try:
                     if overlay:
                         overlay.closeApp()
-                    overlay = SimpleCircleOverlay(screenshotPath="screenshot.jpg")
+                    overlay = SimpleCircleOverlay(screenshotPath="screenshot.jpg", screenshotPathCircle="screenshotC.jpg", wantClickInfo=100)
                     root.withdraw()
-                    X, Y, moved = overlay.run()
+                    X, Y, moved, desc = overlay.run()
                     root.deiconify()
+                    if task["descEntryVar"].get().startswith("No description"):
+                        texts = desc.split("+")
+                        for i in range(len(texts)):
+                            texts[i] = texts[i].split(",")[0]
+                        text = ".".join(texts)
+                        task["descEntryVar"].set(text)
                     task["argsEntryVar"].set(f"{X},{Y}")
                 except Exception as e:
                     alert(f"Error opening coordinate detector: {e}")
                     
                 if moved and getSetting("niceUser"):
-                    submitFormAsync("No desc needed", X, Y, "screenshot.jpg")
+                    submitFormAsync(desc, X, Y, ("screenshot.jpg", "screenshotC.jpg"))
                     
 
             case "❌":

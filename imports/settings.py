@@ -75,7 +75,7 @@ def checkCode(code, win):
         participationWin.title("AI Training Participation")
         participationWin.geometry("450x300")
         participationWin.configure(bg="#f0f8ff")
-        participationWin.resizable(False, False)
+        participationWin.resizable(True, True)
         
         # Center the window
         participationWin.update_idletasks()

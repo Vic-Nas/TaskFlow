@@ -1,4 +1,3 @@
-
 from imports.settings import logged, login, color, getSetting
 from imports.utils import centerWin, submitFormAsync
 import webbrowser, traceback
@@ -16,7 +15,7 @@ from imports.mail import sendFeedBackMail
 
 overlay = None
 feedBackWindow = None
-MAX_ITEMS = 14
+MAX_ITEMS = 18  # Increased default further
 displayStartIndex = 0
 
 
@@ -79,7 +78,102 @@ def singleInstance(port=65432):
 lock_socket = singleInstance()
 
 
+def calculate_max_items():
+    """Calculate maximum number of tasks that can fit in the available space"""
+    try:
+        # Get current window dimensions - force update first
+        root.update_idletasks()
+        window_height = root.winfo_height()
+        
+        # If window height is too small (like initial 1), use the geometry setting
+        if window_height < 100:
+            # Extract height from geometry string like "1400x900"
+            geometry = root.geometry()
+            if 'x' in geometry:
+                window_height = int(geometry.split('x')[1].split('+')[0])
+            else:
+                window_height = 900  # fallback
+        
+        print(f"Window height: {window_height}")  # Debug
+        
+        # Conservative measurements - slightly larger to ensure we don't cut off
+        header_height = 100   # High frame with buttons (increased)
+        toolbar_height = 90   # Toolbar with run controls (increased)
+        task_header_height = 45  # Column headers in tasks frame (increased)
+        margins_padding = 100    # Various margins, padding, and spacing (increased)
+        task_row_height = 35     # Actual height per task row (back to original)
+        
+        # Calculate available height for task rows
+        available_height = window_height - header_height - toolbar_height - task_header_height - margins_padding
+        
+        print(f"Available height: {available_height}")  # Debug
+        
+        # Calculate number of task rows that fit
+        max_task_rows = max(12, int(available_height // task_row_height))  # Minimum 12 tasks (increased)
+        
+        print(f"Calculated max_task_rows: {max_task_rows}")  # Debug
+        
+        # Cap at reasonable maximum
+        return min(max_task_rows, 35)  # Increased max cap
+    except Exception as e:
+        print(f"Error in calculate_max_items: {e}")
+        return 18  # Fallback to higher default
+    
+    
 def loadGroups():
+    # Clear existing data first
+    global taskGroups, filePaths
+    taskGroups.clear()
+    filePaths.clear()
+    tasksListBox.delete(0, "end")
+    
+    if not os.path.exists(tasksDir):
+        return
+        
+    for filename in os.listdir(tasksDir):
+        if not filename.endswith('.task'):  # Validate file type
+            continue
+        filePath = os.path.join(tasksDir, filename)
+        try:
+            taskGroups.append(TaskGroup(filePath))
+            filePaths[taskGroups[-1]] = filePath
+        except Exception as e:
+            print(f"Error loading {filename}: {e}")
+            continue
+            
+    goodGroup = lambda group: group.title.lower().startswith(searchEntryVar.get().lower())
+    for taskGroup in filter(goodGroup, taskGroups):
+        tasksListBox.insert("end", taskGroup.title)
+
+def get_current_max_items():
+    """Get the current maximum items, updating the global if needed"""
+    global MAX_ITEMS
+    new_max = calculate_max_items()
+    if new_max != MAX_ITEMS:
+        MAX_ITEMS = new_max
+        print(f"Updated MAX_ITEMS to {MAX_ITEMS}")  # Debug info
+    return MAX_ITEMS
+
+# Force calculation after window is properly set up
+def initialize_max_items():
+    """Initialize MAX_ITEMS after window is ready"""
+    global MAX_ITEMS
+    root.update_idletasks()  # Ensure window is drawn
+    MAX_ITEMS = calculate_max_items()
+    print(f"Initialized MAX_ITEMS to {MAX_ITEMS}")
+
+# Call this after the window setup
+
+# Also add a manual override function for testing
+def force_max_items(num_items):
+    """Force MAX_ITEMS to a specific number for testing"""
+    global MAX_ITEMS
+    MAX_ITEMS = num_items
+    print(f"Forced MAX_ITEMS to {MAX_ITEMS}")
+    if selectedGroup:
+        onClick("Select Group")
+
+# You can call this from console: force_max_items(20)
     # Clear existing data first
     global taskGroups, filePaths
     taskGroups.clear()
@@ -115,21 +209,44 @@ if not logged():
 if not logged():
     alert("You must log in")
     sys.exit()
-    
+
+# DPI Awareness for Windows
+try:
+    import ctypes
+    ctypes.windll.shcore.SetProcessDpiAwareness(1)
+except:
+    pass
+
 root = tkinter.Tk()
-root.geometry("1200x800")
-# root.resizable(True, True)
-root.iconbitmap(Path("data")/"VN.ico")
+
+# Get screen dimensions for relative sizing
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+
+# Increased window size for better initial display
+window_width = min(1400, int(screen_width * 0.9))   # Increased from 1200 and 0.85
+window_height = min(900, int(screen_height * 0.9))  # Increased from 800 and 0.85
+root.geometry(f"{window_width}x{window_height}")
+
+# Make window resizable but set minimum size
+root.minsize(1200, 700)  # Increased minimum size
+root.resizable(True, True)
+
+# Icon handling with fallback
+try:
+    icon_path = Path("data") / "VN.ico"
+    if icon_path.exists():
+        root.iconbitmap(icon_path)
+except Exception as e:
+    print(f"Could not load icon: {e}")
+
 root.title("TaskFlow")
 
-
 centerWin(root)
-fontStyle = "Times New Roman"
+fontStyle = ("Segoe UI", "Arial", "Helvetica", "sans-serif")  # Font fallback list
 root.deiconify()
 root.lift()
 root.focus_force()
-
-
 
 def onClick(buttonText, task=None):
     global selectedGroup, displayStartIndex, overlay, feedBackWindow, X, Y
@@ -149,7 +266,7 @@ def onClick(buttonText, task=None):
                     else:
                         return
 
-                goodGroup = lambda group: group.title.startswith(searchEntryVar.get())
+                goodGroup = lambda group: group.title.lower().startswith(searchEntryVar.get().lower())
                 filteredGroups = list(filter(goodGroup, taskGroups))
 
                 if selection[0] >= len(filteredGroups):
@@ -160,18 +277,19 @@ def onClick(buttonText, task=None):
 
                 selectedGroup = filteredGroups[selection[0]]
                 size = len(selectedGroup.tasks)
-                start = displayStartIndex
+                current_max = get_current_max_items()
+                
+                # Fix the display start index calculation
+                if displayStartIndex >= size:
+                    displayStartIndex = max(0, size - current_max)
+                elif displayStartIndex + current_max > size:
+                    displayStartIndex = max(0, size - current_max)
 
-                if size <= MAX_ITEMS:
-                    start = 0
-                elif start > size - MAX_ITEMS:
-                    start = max(0, size - MAX_ITEMS)
+                # Calculate proper left up/down values
+                leftUp = displayStartIndex
+                leftDown = max(0, size - displayStartIndex - current_max)
 
-                displayStartIndex = start
-                displaySelected(
-                    leftUp=start,
-                    leftDown=max(0, size - start - MAX_ITEMS)
-                )
+                displaySelected(leftUp=leftUp, leftDown=leftDown)
             
             case "Import Group":
                 filePath = filedialog.askopenfilename(
@@ -182,7 +300,6 @@ def onClick(buttonText, task=None):
                     filePath if filePath else None)
                 
                 if filePath:
-                    # FIX: Validate file exists
                     if os.path.exists(filePath):
                         try:
                             copy(filePath, Path("tasks"))
@@ -201,12 +318,10 @@ def onClick(buttonText, task=None):
                 times_str = runGroupTimesEntry.get()
                 root.withdraw()
                 try:
-                    # FIX: Validate integer input
                     times = int(times_str)
                     if times <= 0:
                         raise ValueError("Times must be positive")
                     
-                        
                     for _ in range(times):
                         for task in selectedGroup.tasks:
                             task["run"].invoke()
@@ -311,7 +426,6 @@ def onClick(buttonText, task=None):
                 if not task:
                     return
                 try:
-                    # Ask user if they want to save changes
                     if task["changed"]:
                         save_response = tkinter.messagebox.askyesno(
                             "Save Changes", 
@@ -337,7 +451,6 @@ def onClick(buttonText, task=None):
                 if not task:
                     return
                 try:
-                    # FIX: Safe access to task variables
                     if not all(key in task for key in ["argsEntryVar", "commandMenuVar", "descEntryVar", "timesEntryVar"]):
                         alert("Task not properly initialized")
                         return
@@ -349,7 +462,6 @@ def onClick(buttonText, task=None):
                     desc = task["descEntryVar"].get()
                     times_str = task["timesEntryVar"].get()
                     
-                    # FIX: Validate times input
                     try:
                         times = int(times_str) if times_str.strip() else 1
                         if times <= 0:
@@ -361,7 +473,6 @@ def onClick(buttonText, task=None):
                     task.update(newTask, False)
                     selectedGroup.saveAt(filePaths[selectedGroup])
                     
-                    # Safe button color update
                     if "save" in task:
                         task["save"].config(bg="#2196F3")
                         task["changed"] = False
@@ -459,12 +570,14 @@ def onClick(buttonText, task=None):
                         print(f"Error updating save button color: {e}")
 
             case b if b.startswith("⬆"):
-                displayStartIndex = max(0, displayStartIndex - 1)
-                onClick("Select Group")
+                if displayStartIndex > 0:
+                    displayStartIndex = max(0, displayStartIndex - 1)
+                    onClick("Select Group")
 
             case b if b.startswith("⬇"):
                 if selectedGroup:
-                    max_start = len(selectedGroup.tasks) - MAX_ITEMS
+                    current_max = get_current_max_items()
+                    max_start = max(0, len(selectedGroup.tasks) - current_max)
                     if displayStartIndex < max_start:
                         displayStartIndex += 1
                         onClick("Select Group")
@@ -479,7 +592,7 @@ def onClick(buttonText, task=None):
                     feedBackWindow.title("Send Feedback")
                     feedBackWindow.geometry("420x380")
                     centerWin(feedBackWindow)
-                    feedBackWindow.transient()
+                    feedBackWindow.transient(root)
                     feedBackWindow.grab_set()
                     feedBackWindow.configure(bg="#1e1e2f")
                     attachedFiles = []
@@ -533,51 +646,42 @@ def onClick(buttonText, task=None):
                     
                     # Header
                     header = tkinter.Label(feedBackWindow, text="📢 Send us your feedback",
-                                        bg="#2d2d44", fg="white", font=("Segoe UI", 14, "bold"),
+                                        bg="#2d2d44", fg="white", font=(fontStyle[0], 14, "bold"),
                                         pady=10)
                     header.pack(fill="x")
                     
                     # Main content frame
                     content_frame = tkinter.Frame(feedBackWindow, bg="#1e1e2f")
-                    content_frame.pack(fill="x", padx=15, pady=(10, 0))
+                    content_frame.pack(fill="both", expand=True, padx=15, pady=(10, 0))
                     
                     # Feedback text
                     textBox = tkinter.Text(content_frame, height=5, wrap="word",
                                         bg="#f0f0f0", fg="#000000",
                                         relief="flat", highlightthickness=1, highlightbackground="#4cc9f0")
-                    textBox.pack(fill="x", pady=(0, 8))
+                    textBox.pack(fill="both", expand=True, pady=(0, 8))
                     
                     # Add files button
                     selectBtn = tkinter.Button(content_frame, text="📎 Add files", command=selectFiles,
                                             bg="#4cc9f0", fg="white", activebackground="#3bb0d8",
-                                            relief="flat", font=("Segoe UI", 10, "bold"))
+                                            relief="flat", font=(fontStyle[0], 10, "bold"))
                     selectBtn.pack(fill="x", pady=(0, 5))
                     
                     # Helper text
                     helpText = tkinter.Label(content_frame, text="Double-click a file to remove it",
-                                            bg="#1e1e2f", fg="#888888", font=("Segoe UI", 9))
+                                            bg="#1e1e2f", fg="#888888", font=(fontStyle[0], 9))
                     helpText.pack(anchor="w", pady=(0, 3))
                     
                     # Scrollable file list with fixed height
-                    fileFrame = tkinter.Frame(content_frame, bg="#1e1e2f", height=120)
+                    fileFrame = tkinter.Frame(content_frame, bg="#1e1e2f")
                     fileFrame.pack(fill="x", pady=(0, 8))
-                    fileFrame.pack_propagate(False)
                     
-                    fileScroll = tkinter.Scrollbar(
-                        fileFrame,
-                        orient="vertical",
-                        bg="lightblue",      
-                        troughcolor="white", 
-                        activebackground="blue",# Hover
-                        relief="flat",         
-                        highlightthickness=0
-                    )
-
-                    
+                    fileScroll = tkinter.Scrollbar(fileFrame, orient="vertical")
                     fileListBox = tkinter.Listbox(fileFrame, yscrollcommand=fileScroll.set,
                                                 bg="white", fg="black", relief="flat",
-                                                selectbackground="#4cc9f0", activestyle="none")
+                                                selectbackground="#4cc9f0", activestyle="none",
+                                                height=6)
                     fileListBox.pack(side="left", fill="both", expand=True)
+                    fileScroll.pack(side="right", fill="y")
                     fileScroll.config(command=fileListBox.yview)
                     
                     # Bind double-click event to the listbox
@@ -589,11 +693,13 @@ def onClick(buttonText, task=None):
                     
                     sendBtn = tkinter.Button(bottom_frame, text="📤 Send Feedback", command=send,
                                             bg="#72efdd", fg="#000", activebackground="#56d8c9",
-                                            relief="flat", font=("Segoe UI", 11, "bold"))
+                                            relief="flat", font=(fontStyle[0], 11, "bold"))
                     sendBtn.pack(fill="x", padx=15)
                     
                     updateFileList()
-                    selectFiles(("logs.txt",))
+                    # Check if logs.txt exists before adding it
+                    if os.path.exists("logs.txt"):
+                        selectFiles(("logs.txt",))
                     centerWin(feedBackWindow)
                     
                 except Exception as e:
@@ -616,29 +722,8 @@ class MyButton(tkinter.Button):
             kwargs['command'] = lambda: onClick(self['text'])
         
         super().__init__(master, **kwargs)
-        
-# High Frame
-highFrameBg = "violet"
-highFrame = tkinter.Frame(root, bg = highFrameBg, width = 1200, 
-                        height = 60
-                        )
-highFrame.pack()
-highFrame.grid_propagate(False)
 
-version = str(getSetting("version"))[:3]  # prend max 3 caractères
-
-taskFlowButton = MyButton(
-    highFrame, 
-    text = "TaskFlow v" + version, 
-    borderwidth = 0, font = (fontStyle, 22, "bold"), 
-    bg = highFrameBg, fg = "white", width = 12,
-    anchor = "w", justify = "center"
-)
-
-taskFlowButton.grid(row = 0, column = 0, pady = 5, padx = (15, 0))
-
-
-def normalizeEmail(email, maxLen = 35):
+def normalizeEmail(email, maxLen=35):
     if len(email) == maxLen:
         return email
     if len(email) < maxLen:
@@ -652,8 +737,31 @@ def normalizeEmail(email, maxLen = 35):
     rightLen = keepLen - leftLen
     return email[:leftLen] + "..." + email[-rightLen:]
 
+# Configure root window for responsive design
+root.grid_rowconfigure(0, weight=0)  # High frame - fixed
+root.grid_rowconfigure(1, weight=1)  # Main content - expandable
+root.grid_columnconfigure(0, weight=1)
 
+# High Frame - using grid instead of pack for better control
+highFrameBg = "violet"
+highFrame = tkinter.Frame(root, bg=highFrameBg)
+highFrame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
 
+# Configure high frame grid
+for i in range(6):
+    highFrame.grid_columnconfigure(i, weight=0)
+highFrame.grid_columnconfigure(1, weight=1)  # Email label expands
+
+version = str(getSetting("version"))[:3]
+
+taskFlowButton = MyButton(
+    highFrame, 
+    text="TaskFlow v" + version, 
+    borderwidth=0, font=(fontStyle[0], 22, "bold"), 
+    bg=highFrameBg, fg="white",
+    anchor="w", justify="center"
+)
+taskFlowButton.grid(row=0, column=0, pady=5, padx=(15, 10), sticky="w")
 
 email = getSetting("email")
 normalizedEmail = normalizeEmail(email)
@@ -661,378 +769,358 @@ normalizedEmail = normalizeEmail(email)
 userLabel = tkinter.Label(
     highFrame, 
     text=normalizedEmail,
-    font = ('Courier', 13, 'bold'),
+    font=('Courier', 13, 'bold'),
     bg=highFrameBg, fg="green",
     anchor="w"
 )
+userLabel.grid(row=0, column=1, pady=5, padx=(8, 20), sticky="ew")
 
-userLabel.grid(row=0, column=1, pady=5, padx=(8, 20))
+feedBackButton = MyButton(highFrame, text="FeedBack",
+                          bg="blue", fg="white",
+                          font=(fontStyle[0], 14), borderwidth=3)
+feedBackButton.grid(row=0, column=2, padx=5, pady=2)
 
+newGroupButton = MyButton(highFrame, text="New Group",
+                         bg="orange", fg="white",
+                         font=(fontStyle[0], 14), borderwidth=3)
+newGroupButton.grid(row=0, column=3, padx=5, pady=2)
 
-feedBackButton = MyButton(highFrame, text = "FeedBack",
-                            bg = "blue", fg = "white",
-                            font = (fontStyle, 14), borderwidth = 3
-                            )
-feedBackButton.grid(row = 0, column = 2, padx = 10)
+importGroupButton = MyButton(highFrame, text="Import Group",
+                            bg="green", fg="white",
+                            font=(fontStyle[0], 14), borderwidth=3)
+importGroupButton.grid(row=0, column=4, padx=5, pady=2)
 
-newGroupButton = MyButton(highFrame, text = "New Group",
-                        bg = "orange", fg = "white",
-                        font = (fontStyle, 14), borderwidth = 3
-                        )
-newGroupButton.grid(row = 0, column = 3, padx = 10)
+buyCoffeeButton = MyButton(highFrame, text="☕ Buy me a coffee",
+                          font=(fontStyle[0], 14, "bold"),
+                          borderwidth=3, fg="black", 
+                          bg="yellow")
+buyCoffeeButton.grid(row=0, column=5, padx=(5, 15), pady=2)
 
-importGroupButton = MyButton(highFrame, text = "Import Group",
-                            bg = "green", fg = "white",
-                            font = (fontStyle, 14), borderwidth = 3
-                            )
-importGroupButton.grid(row = 0, column = 4, padx = 10)
+# Main TasksFrame - using grid for better layout control
+groupTasksFrame = tkinter.Frame(root, bg="lightgray")
+groupTasksFrame.grid(row=1, column=0, sticky="nsew", padx=5, pady=(0, 5))
 
-buyCoffeeButton = MyButton(highFrame, text = "☕ Buy me a coffee",
-                                font = (fontStyle, 14, "bold"),
-                                borderwidth = 3, fg = "black", 
-                                bg = "yellow"
-                                )
-buyCoffeeButton.grid(row = 0, column = 5, padx = (10, 0))
+# Configure main frame grid
+groupTasksFrame.grid_rowconfigure(0, weight=1)
+groupTasksFrame.grid_columnconfigure(0, weight=0)  # Task list - fixed width
+groupTasksFrame.grid_columnconfigure(1, weight=1)  # Chosen group - expandable
 
+# Task List Frame
+taskListFrame = tkinter.Frame(groupTasksFrame, bg="lightblue")
+taskListFrame.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
 
-# TasksFrame
-groupTasksFrame = tkinter.Frame(
-    root,
-    bg = "red"
-    )
-groupTasksFrame.pack()
-
-
-# searchEntry = tkinter.Entry(
-#     groupTasksFrame,
-#     font = (fontStyle, 16, "bold"),
-#     width = 15
-    
-# )
-
-# searchEntry.grid(
-#     row = 0, column = 0,
-# )
-
-taskListFrame = tkinter.Frame(
-    groupTasksFrame,
-)
-taskListFrame.grid(row = 0, column = 0)
+taskListFrame.grid_rowconfigure(1, weight=1)  # Listbox expands
+taskListFrame.grid_columnconfigure(0, weight=1)
 
 searchEntryVar = tkinter.StringVar()
 
+searchFrame = tkinter.Frame(taskListFrame)
+searchFrame.grid(row=0, column=0, sticky="ew", pady=(0, 5))
+searchFrame.grid_columnconfigure(0, weight=1)
+
 searchEntry = tkinter.Entry(
-    taskListFrame,
-    font=(fontStyle, 16, "bold"),
+    searchFrame,
+    font=(fontStyle[0], 16, "bold"),
     fg="#333333",
     bg="#ffffff",
     insertbackground="#555555",
     relief="flat",                    
     highlightthickness=2,           
     highlightbackground="#cccccc",    
-    highlightcolor="#0078d7"       ,
-    textvariable = searchEntryVar  
+    highlightcolor="#0078d7",
+    textvariable=searchEntryVar  
 )
-
-searchEntry.grid(
-    row = 0, column = 0,
-)
+searchEntry.grid(row=0, column=0, sticky="ew", padx=(0, 5))
 
 deleteGroupButton = MyButton(
-    taskListFrame,
-    text = "🗙",
-    justify = "center",
-    bg = "red",
-    width = 4
+    searchFrame,
+    text="🗙",
+    justify="center",
+    bg="red",
+    width=4
 )
-deleteGroupButton.grid(
-    row = 0, column = 1,
-    padx = 2
-)
+deleteGroupButton.grid(row=0, column=1)
 
+# Listbox Frame with Scrollbar
+listFrame = tkinter.Frame(taskListFrame)
+listFrame.grid(row=1, column=0, sticky="nsew")
+listFrame.grid_rowconfigure(0, weight=1)
+listFrame.grid_columnconfigure(0, weight=1)
 
-# Listbox with ScrollBar
 tasksListBox = tkinter.Listbox(
-    taskListFrame, bg = "orange",
-    fg = "black",
-    selectbackground = "gray",
-    font = (fontStyle, 20, "bold"),
-    exportselection = False,
-    height=22,
-    width=18
+    listFrame, bg="orange",
+    fg="black",
+    selectbackground="gray",
+    font=(fontStyle[0], 20, "bold"),
+    exportselection=False
 )
+
+scrollbar = tkinter.Scrollbar(listFrame, command=tasksListBox.yview)
+tasksListBox.configure(yscrollcommand=scrollbar.set)
 
 tasksListBox.bind('<Double-Button-1>', 
-                    lambda event: onClick("DoubleClick Group"))
-
-
-scrollbar = tkinter.Scrollbar(
-    taskListFrame, command = tasksListBox.yview
-    )
-
-tasksListBox.configure(yscrollcommand = scrollbar.set)
-
-
+                  lambda event: onClick("DoubleClick Group"))
 tasksListBox.bind('<<ListboxSelect>>', lambda _: onClick("Select Group"))
 
-tasksListBox.grid(row = 1, column = 0, sticky = "nsew")
-scrollbar.grid(row = 1, column = 1, sticky = "ns")
-
+tasksListBox.grid(row=0, column=0, sticky="nsew")
+scrollbar.grid(row=0, column=1, sticky="ns")
 
 loadGroups()
 
-chosenGroupFrame = tkinter.Frame(groupTasksFrame, width = 900, height = 740,
-                                bg = "blue"
-                                )
-chosenGroupFrame.grid(row = 0, column = 1)
-chosenGroupFrame.grid_propagate(False)
+# Chosen Group Frame - now responsive
+chosenGroupFrame = tkinter.Frame(groupTasksFrame, bg="blue")
+chosenGroupFrame.grid(row=0, column=1, sticky="nsew")
+chosenGroupFrame.grid_rowconfigure(1, weight=1)  # Tasks area expands
+chosenGroupFrame.grid_columnconfigure(0, weight=1)
 
-def displaySelected(leftUp = 0, leftDown = 0):
+def displaySelected(leftUp=0, leftDown=0):
     global runGroupTimesEntry, displayStartIndex
     toolBarFrameBg = "cyan"
-    toolBarFrame = tkinter.Frame(
-        chosenGroupFrame,
-        bg = toolBarFrameBg,
-        width = 900, height = 55
-        )
-
-    toolBarFrame.grid(row = 0, column = 0, sticky = "ew")
-    toolBarFrame.grid_propagate(False)
+    current_max = get_current_max_items()
+    
+    print(f"Display: total tasks={len(selectedGroup.tasks)}, max_items={current_max}, start_index={displayStartIndex}")  # Debug
+    
+    # Clear existing widgets
+    for widget in chosenGroupFrame.winfo_children():
+        widget.destroy()
+    
+    toolBarFrame = tkinter.Frame(chosenGroupFrame, bg=toolBarFrameBg)
+    toolBarFrame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+    
+    # Configure toolbar grid
+    for i in range(8):  # Increased for status label
+        toolBarFrame.grid_columnconfigure(i, weight=0)
+    toolBarFrame.grid_columnconfigure(0, weight=1)  # Author label expands
     
     authorLabel = tkinter.Label(
         toolBarFrame,
-        text = f"By {normalizeEmail(selectedGroup.author)}",
-        bg = "cyan",
-        fg = "navy",
-        font = ('Courier', 13, 'bold'),
-        anchor = "w",
-        )
-    authorLabel.grid(row = 0, column = 0, 
-                    padx = 10, pady = 2, 
-                    sticky = "w")
+        text=f"By {normalizeEmail(selectedGroup.author)}",
+        bg="cyan",
+        fg="navy",
+        font=('Courier', 13, 'bold'),
+        anchor="w",
+    )
+    authorLabel.grid(row=0, column=0, sticky="ew", padx=(10, 20), pady=2)
     
     # Share
     shareButton = MyButton(
         toolBarFrame,
-        text = "Share",
-        bg = "green",
-        fg = "white",
-        font = (fontStyle, 16, "bold"),
-        width = 8,
-        relief = "raised",
-        borderwidth = 3
-        )
-    shareButton.grid(row = 0, column = 1, padx = 5, pady = 5)
+        text="Share",
+        bg="green",
+        fg="white",
+        font=(fontStyle[0], 16, "bold"),
+        relief="raised",
+        borderwidth=3
+    )
+    shareButton.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
     
     # Run
     runGroupButton = MyButton(
         toolBarFrame,
-        text = "Run Group",
-        bg = "red",
-        fg = "white",
-        font = (fontStyle, 16, "bold"),
-        width = 8,
-        relief = "raised",
-        borderwidth = 3
-        )
-    runGroupButton.grid(row = 0, column = 2, padx = 5, pady = 1)
+        text="Run Group",
+        bg="red",
+        fg="white",
+        font=(fontStyle[0], 16, "bold"),
+        relief="raised",
+        borderwidth=3
+    )
+    runGroupButton.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
     
     # Times Entry
     runGroupTimesEntry = tkinter.Entry(
         toolBarFrame,
-        width = 2,
-        font = (fontStyle, 22, "bold"),
-        bg = "white",
-        fg = "blue",
+        width=3,
+        font=(fontStyle[0], 22, "bold"),
+        bg="white",
+        fg="blue",
+        justify="center"
     )
     runGroupTimesEntry.insert(0, "1")
-    runGroupTimesEntry.grid(row = 0, column = 3, padx = 3, pady = 1)
+    runGroupTimesEntry.grid(row=0, column=3, padx=3, pady=5)
     
     timesLabel = tkinter.Label(
         toolBarFrame,
-        width = 5,
-        font = (fontStyle, 20, "bold"),
-        bg = toolBarFrameBg,
-        text = "time(s)"
+        font=(fontStyle[0], 20, "bold"),
+        bg=toolBarFrameBg,
+        text="time(s)"
     )
-    timesLabel.grid(row = 0, column = 4, padx = (2, 5), pady = 1)
+    timesLabel.grid(row=0, column=4, padx=(2, 5), pady=5)
     
+    # Calculate accurate navigation counts and status
+    total_tasks = len(selectedGroup.tasks)
+    showing_from = displayStartIndex + 1 if total_tasks > 0 else 0
+    showing_to = min(displayStartIndex + current_max, total_tasks)
+    
+    # Navigation buttons with accurate counts
     upButton = MyButton(
         toolBarFrame,
-        text = f"⬆{leftUp}",
-        bg = "yellow",
-        font = (fontStyle, 17, "bold"),
+        text=f"⬆{leftUp}" if leftUp > 0 else "⬆",
+        bg="yellow" if leftUp > 0 else "lightgray",
+        fg="black" if leftUp > 0 else "gray",
+        font=(fontStyle[0], 17, "bold"),
+        state="normal" if leftUp > 0 else "disabled"
     )
-    upButton.grid(row = 0, column = 5, padx = 2, pady = 4)
+    upButton.grid(row=0, column=5, padx=2, pady=5)
     
     downButton = MyButton(
         toolBarFrame,
-        text = f"⬇{leftDown}",
-        bg = "yellow",
-        font = (fontStyle, 17, "bold"),
+        text=f"⬇{leftDown}" if leftDown > 0 else "⬇",
+        bg="yellow" if leftDown > 0 else "lightgray",
+        fg="black" if leftDown > 0 else "gray",
+        font=(fontStyle[0], 17, "bold"),
+        state="normal" if leftDown > 0 else "disabled"
     )
-    downButton.grid(row = 0, column = 6, padx = 2, pady = 4)
-
-    # Main frame configuration
-    tasksFrame = tkinter.Frame(
-        chosenGroupFrame,
-        bg="blue",
-        width=900, 
-        height=690
+    downButton.grid(row=0, column=6, padx=2, pady=5)
+    
+    # Add status label showing current view
+    statusLabel = tkinter.Label(
+        toolBarFrame,
+        text=f"Showing {showing_from}-{showing_to} of {total_tasks}",
+        bg=toolBarFrameBg,
+        fg="navy",
+        font=(fontStyle[0], 10, "bold")
     )
+    statusLabel.grid(row=0, column=7, padx=(10, 5), pady=5)
 
-    tasksFrame.grid(row=1, column=0, sticky="nesw")
-    tasksFrame.grid_propagate(False)
-
-    headers = ["Description", "Command", "Arguments", "Times"]
+    # Tasks frame with proper scrollable area
+    tasksFrame = tkinter.Frame(chosenGroupFrame, bg="blue")
+    tasksFrame.grid(row=1, column=0, sticky="nsew", padx=5, pady=(0, 5))
+    
+    # Configure grid columns for the tasks frame
+    headers = ["Command", "Description", "Arguments", "Times", "Run", "Save", "Del", "Add"]
     for i, header in enumerate(headers):
+        tasksFrame.grid_columnconfigure(i, weight=1 if i == 1 else 0, minsize=80)
+        
         headerLabel = tkinter.Label(
             tasksFrame,
             text=header,
             bg="darkgray",
             fg="white",
-            font=(fontStyle, 12, "bold"),
+            font=(fontStyle[0], 12, "bold"),
             relief="raised",
             bd=1
         )
-        headerLabel.grid(row=0, column=i, sticky="ew", padx=1, pady=1)
-
+        headerLabel.grid(row=0, column=i, sticky="ew", padx=1, pady=1, ipady=5)
     
+    # Add tasks to the grid - show exactly current_max items
+    end_index = min(displayStartIndex + current_max, total_tasks)
+    visible_tasks = selectedGroup.tasks[displayStartIndex:end_index]
     
-    for row, task in enumerate(selectedGroup.tasks[displayStartIndex:], start = 1):
-        # Column 2: Entry for description (default task.desc)
+    print(f"Showing tasks {displayStartIndex} to {end_index-1} ({len(visible_tasks)} tasks)")  # Debug
+    
+    for row, task in enumerate(visible_tasks, start=1):
+        try:
+            command, args = str(task).split("  ")[:2]
+            args = ",".join(args.split(" "))
+        except (ValueError, IndexError):
+            command, args = "WAIT", "1"
         
-        command, args = str(task).split("  ")[:2]
-        args = ",".join(args.split(" "))
-        
-        
-         # Column 1: OptionMenu for commands
+        # Column 0: OptionMenu for commands
         commandMenuVar = tkinter.StringVar(tasksFrame)
-        commandMenuVar.set(command)  # Default value
+        commandMenuVar.set(command)
         commandMenu = tkinter.OptionMenu(
             tasksFrame,
             commandMenuVar,
             *matchAction.keys(),
-            command = lambda varVal, t=task: onClick(varVal, t),
+            command=lambda varVal, t=task: onClick(varVal, t),
         )
         commandMenu.config(
-            font=(fontStyle, 16, "bold"),
+            font=(fontStyle[0], 12, "bold"),
             relief="solid",
             bd=1,
-            fg="violet", 
-            width=7
+            fg="violet"
         )
-
-        # commandMenuVar.trace('w', lambda *args: onClick(commandMenuVar.get(), commandMenu, commandMenuVar))
         commandMenu.grid(row=row, column=0, sticky="ew", padx=2, pady=2)
         
-        
+        # Column 1: Entry for description
         descEntryVar = tkinter.StringVar()
         descEntry = tkinter.Entry(
             tasksFrame,
-            font=(fontStyle, 16),
+            font=(fontStyle[0], 12),
             relief="solid",
-            bd = 1,
-            width = 26, 
-            textvariable = descEntryVar,
+            bd=1,
+            textvariable=descEntryVar,
         )
         descEntryVar.set(task.desc)
-        
         descEntry.grid(row=row, column=1, sticky="ew", padx=2, pady=2)
         
-       
-        
-        
-        # Column 3: Entry for arguments
+        # Column 2: Entry for arguments
         argsEntryVar = tkinter.StringVar()
-        
         argsEntry = tkinter.Entry(
             tasksFrame,
-            font = (fontStyle, 16),
-            relief = "solid",
-            bd = 1,
-            justify = "center",
-            width = 18, 
-            textvariable = argsEntryVar
+            font=(fontStyle[0], 12),
+            relief="solid",
+            bd=1,
+            justify="center",
+            textvariable=argsEntryVar
         )
-        
         argsEntryVar.set(args.replace("[SPACE]", " "))
         argsEntry.grid(row=row, column=2, sticky="ew", padx=2, pady=2)
         
-        # Column 4: Entry for Times
+        # Column 3: Entry for Times
         timesEntryVar = tkinter.StringVar()
-        
         timesEntry = tkinter.Entry(
             tasksFrame,
-            font=(fontStyle, 16),
-            relief = "solid",
-            bd = 1, 
-            justify = "center",
-            width = 6,
-            textvariable = timesEntryVar
+            font=(fontStyle[0], 12),
+            relief="solid",
+            bd=1, 
+            justify="center",
+            textvariable=timesEntryVar
         )
         timesEntryVar.set(str(task.times))
-        
         timesEntry.grid(row=row, column=3, sticky="ew", padx=2, pady=2)
         
-        # Column 5: Validate Button
+        # Column 4: Run Button
         runTaskBtn = MyButton(
             tasksFrame,
             text="Run",
-            font=(fontStyle, 16, "bold"),
+            font=(fontStyle[0], 12, "bold"),
             bg="#4CAF50",
             fg="white",
             relief="raised",
             bd=2,
             cursor="hand2",
-            command = lambda t=task: onClick("Run", t)
+            command=lambda t=task: onClick("Run", t)
         )
-        runTaskBtn.grid(
-            row = row, column=4, 
-            sticky="ew", 
-            padx=2, pady=2
-            )
+        runTaskBtn.grid(row=row, column=4, sticky="ew", padx=2, pady=2)
 
-        # Column 6: Save Button
+        # Column 5: Save Button
         saveBtn = MyButton(
             tasksFrame,
             text="Save",
-            font=(fontStyle, 16, "bold"),
+            font=(fontStyle[0], 12, "bold"),
             bg="#2196F3",
             fg="white",
             relief="raised",
             bd=2,
             cursor="hand2",
-            command = lambda t=task: onClick("Save", t)
-            
+            command=lambda t=task: onClick("Save", t)
         )
-        saveBtn.grid(row=row, column=5, sticky="ew", 
-                        padx = 2, pady = 2)
+        saveBtn.grid(row=row, column=5, sticky="ew", padx=2, pady=2)
         
-        
+        # Column 6: Delete Button
         delButton = MyButton(
             tasksFrame, 
-            text = "❌",
-            bg = "red",
-            borderwidth = 5,
-            cursor = "hand2",
-            command = lambda t=task: onClick("❌", t)
+            text="❌",
+            bg="red",
+            borderwidth=2,
+            cursor="hand2",
+            command=lambda t=task: onClick("❌", t)
         )
-        delButton.grid(row = row, column = 6, sticky = "ew", 
-                        padx = 2, pady = 2)
+        delButton.grid(row=row, column=6, sticky="ew", padx=2, pady=2)
         
+        # Column 7: Add Button
         addDownButton = MyButton(
             tasksFrame, 
-            text = "➕",
-            bg = "gray",
-            borderwidth = 5,
-            cursor = "hand2",
-            command = lambda t=task: onClick("➕", t)
+            text="➕",
+            bg="gray",
+            borderwidth=2,
+            cursor="hand2",
+            command=lambda t=task: onClick("➕", t)
         )
-        addDownButton.grid(row = row, column = 7, sticky = "ew", 
-                        padx = 2, pady = 2)
+        addDownButton.grid(row=row, column=7, sticky="ew", padx=2, pady=2)
 
-        
+        # Update task dictionary with UI elements
         task.update(
             {
                 "run": runTaskBtn,
@@ -1048,22 +1136,43 @@ def displaySelected(leftUp = 0, leftDown = 0):
             }
         )
 
-        
+        # Bind change events to mark task as modified
         commandMenuVar.trace_add("write", lambda *_, t=task: onClick("modify", t))
         descEntryVar.trace_add("write", lambda *_, t=task: onClick("modify", t))
         argsEntryVar.trace_add("write", lambda *_, t=task: onClick("modify", t))
         timesEntryVar.trace_add("write", lambda *_, t=task: onClick("modify", t))
-        
 
-
-
-# FIX 3: Better search handling
+# Search handling
 def on_search_change(*args):
     try:
+        global displayStartIndex
+        displayStartIndex = 0  # Reset to top when searching
         loadGroups()
     except Exception as e:
         print(f"Search error: {e}")
 
 searchEntryVar.trace_add("write", on_search_change)
 
+# Bind window resize events for responsive behavior
+def on_window_configure(event):
+    if event.widget == root and selectedGroup:
+        # Small delay to ensure window sizing is complete
+        root.after(100, lambda: refresh_display_if_needed())
+
+def refresh_display_if_needed():
+    """Refresh display only if MAX_ITEMS changed significantly"""
+    global MAX_ITEMS
+    old_max = MAX_ITEMS
+    new_max = get_current_max_items()
+    
+    # Only refresh if the change is significant (more than 2 items difference)
+    if abs(new_max - old_max) > 2:
+        print(f"Significant resize detected: {old_max} -> {new_max}")
+        onClick("Select Group")
+
+root.bind("<Configure>", on_window_configure)
+
+# Center window and show
+centerWin(root)
+root.after(100, initialize_max_items)  # Small delay to ensure window is ready
 root.mainloop()

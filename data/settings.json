@@ -1,11 +1,11 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 5,
+    "version": 6,
     "new": {
         "fix": [],
         "add": [
-            "Actions option menu first"
+            "Responsive design."
         ]
     },
     "niceUser": true

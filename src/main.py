@@ -264,7 +264,7 @@ def onClick(buttonText, task=None):
                     return
                 try:
                     # Ask user if they want to save changes
-                    if "save" in task:
+                    if task["changed"]:
                         save_response = tkinter.messagebox.askyesno(
                             "Save Changes", 
                             f"Save changes in {task.desc}?"

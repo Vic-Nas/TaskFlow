@@ -1,10 +1,10 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 6,
+    "version": 7,
     "new": {
         "fix": [
-            "No click Info."
+            "Save unchanged tasks."
         ],
         "add": [
             "Add update loading window."

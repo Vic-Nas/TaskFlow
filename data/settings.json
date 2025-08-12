@@ -1,12 +1,12 @@
 {
-    "email": "",
+    "email": "@",
     "coloredLogs": false,
-    "version": 3,
+    "version": 4,
     "new": {
-        "fix": [
-            "Displaying deleted group."
-        ],
-        "add": []
+        "fix": [],
+        "add": [
+            "Actions option menu first"
+        ]
     },
     "niceUser": true
 }

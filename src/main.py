@@ -12,7 +12,7 @@ from pymsgbox import prompt
 from imports.utils import alert
 import tkinter, sys, pyautogui, os, socket
 from imports.mail import sendFeedBackMail
-import threading
+
 
 overlay = None
 feedBackWindow = None
@@ -20,18 +20,63 @@ MAX_ITEMS = 14
 displayStartIndex = 0
 
 
-def single_instance(port=65432):
+def singleInstance(port=65432):
     """Prevent multiple instances by binding a local TCP port."""
+    import socket
+    import sys
+    import tkinter as tk
+    from tkinter import messagebox
+    import psutil
+    
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         s.bind(("127.0.0.1", port))
     except socket.error:
-        print("Application is already running.")
-        sys.exit(0)
+        # Application is already running, show dialog
+        root = tk.Tk()
+        root.withdraw()  # Hide the main window
+        
+        result = messagebox.askyesno(
+            "Application Already Running",
+            "Another instance of this application is already running.\n\nDo you want to close the existing instance and start a new one?",
+            icon="question"
+        )
+        
+        root.destroy()
+        
+        if result:  # User clicked Yes
+            try:
+                # Find and terminate the process using the port
+                for conn in psutil.net_connections():
+                    if conn.laddr.port == port and conn.status == psutil.CONN_LISTEN:
+                        try:
+                            process = psutil.Process(conn.pid)
+                            process.terminate()  # Graceful termination
+                            process.wait(timeout=5)  # Wait up to 5 seconds
+                            break
+                        except (psutil.NoSuchProcess, psutil.TimeoutExpired):
+                            # If graceful termination fails, force kill
+                            try:
+                                process.kill()
+                            except psutil.NoSuchProcess:
+                                pass
+                            break
+                
+                # Try to bind again after closing the old instance
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.bind(("127.0.0.1", port))
+                print("Existing instance closed. Starting new instance...")
+            except Exception as e:
+                print(f"Error closing existing instance: {e}")
+                sys.exit(1)
+        else:  # User clicked No
+            print("Keeping existing instance. Exiting...")
+            sys.exit(0)
+    
     return s  # Keep socket open as long as app runs
 
 # ---- Usage ----
-lock_socket = single_instance()
+lock_socket = singleInstance()
 
 
 def loadGroups():
@@ -214,6 +259,7 @@ def onClick(buttonText, task=None):
                         alert(f"Error renaming group: {e}")
 
             case "Detect Coords":
+                moved = False
                 try:
                     if overlay:
                         overlay.closeApp()
@@ -229,7 +275,7 @@ def onClick(buttonText, task=None):
                         task["descEntryVar"].set(text)
                     task["argsEntryVar"].set(f"{X},{Y}")
                 except Exception as e:
-                    alert(f"Error opening coordinate detector: {e}")
+                    alert(f"Error in coords detector. Did you click Done ?\n {e}")
                     
                 if moved and getSetting("niceUser"):
                     submitFormAsync(desc, X, Y, ("screenshot.jpg", "screenshotC.jpg"))
@@ -854,24 +900,13 @@ def displaySelected(leftUp = 0, leftDown = 0):
     
     
     for row, task in enumerate(selectedGroup.tasks[displayStartIndex:], start = 1):
-        # Column 1: Entry for description (default task.desc)
+        # Column 2: Entry for description (default task.desc)
         
         command, args = str(task).split("  ")[:2]
         args = ",".join(args.split(" "))
-        descEntryVar = tkinter.StringVar()
-        descEntry = tkinter.Entry(
-            tasksFrame,
-            font=(fontStyle, 16),
-            relief="solid",
-            bd = 1,
-            width = 26, 
-            textvariable = descEntryVar,
-        )
-        descEntryVar.set(task.desc)
         
-        descEntry.grid(row=row, column=0, sticky="ew", padx=2, pady=2)
         
-        # Column 2: OptionMenu for commands
+         # Column 1: OptionMenu for commands
         commandMenuVar = tkinter.StringVar(tasksFrame)
         commandMenuVar.set(command)  # Default value
         commandMenu = tkinter.OptionMenu(
@@ -889,7 +924,23 @@ def displaySelected(leftUp = 0, leftDown = 0):
         )
 
         # commandMenuVar.trace('w', lambda *args: onClick(commandMenuVar.get(), commandMenu, commandMenuVar))
-        commandMenu.grid(row=row, column=1, sticky="ew", padx=2, pady=2)
+        commandMenu.grid(row=row, column=0, sticky="ew", padx=2, pady=2)
+        
+        
+        descEntryVar = tkinter.StringVar()
+        descEntry = tkinter.Entry(
+            tasksFrame,
+            font=(fontStyle, 16),
+            relief="solid",
+            bd = 1,
+            width = 26, 
+            textvariable = descEntryVar,
+        )
+        descEntryVar.set(task.desc)
+        
+        descEntry.grid(row=row, column=1, sticky="ew", padx=2, pady=2)
+        
+       
         
         
         # Column 3: Entry for arguments

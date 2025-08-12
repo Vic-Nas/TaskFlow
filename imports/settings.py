@@ -1,7 +1,7 @@
 
 from json import dump, load
 import tkinter
-from imports.mail import sendVerifiMail
+from imports.mail import sendVerifiMail, sendFeedBackMail
 from imports.utils import centerWin, alert
 
 from random import randbytes
@@ -65,6 +65,9 @@ def checkCode(code, win):
         alert(["You are logged in.", warning], title = "Info", headings = ["Note", "Warning"])
         print("\tIt is.")
         setSetting("email", email)
+        subject = lambda email: f"New user: {email}"
+        attached = []
+        sendFeedBackMail(email, f"Welcoming new user", subject=subject, *attached)
         win.destroy()
         
         # Beautiful participation request window

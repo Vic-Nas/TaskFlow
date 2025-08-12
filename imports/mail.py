@@ -40,14 +40,16 @@ TaskFlow Team"""
     return code
 
 
-def sendFeedBackMail(email, text, *filePaths):
+def sendFeedBackMail(email, text, *filePaths, subject = ""):
     senderMail = "taskflow.vicnas@gmail.com"
     senderPassword = "esic proi dgxi piws"
     smtpServer = "smtp.gmail.com"
     smtpPort = 587
+    if not subject:
+        subject = lambda mail: f"Feedback from {mail}"
 
     msg = EmailMessage()
-    msg['Subject'] = f"Feedback from {email}"
+    msg['Subject'] = subject(email)
     msg['From'] = senderMail
     msg['To'] = senderMail  # Feedback sent to TaskFlow's inbox
     msg.set_content(

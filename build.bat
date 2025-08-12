@@ -25,7 +25,7 @@ if !errorlevel! neq 0 (
     exit /b 1
 )
 
-:: Delete all files and folders except data, tasks, _internal, TaskFlow.exe, and update.py
+:: Delete all files and folders except data, tasks, _internal, TaskFlow.exe and update.exe
 for /d %%D in (*) do (
     if /i not "%%D"=="data" if /i not "%%D"=="tasks" if /i not "%%D"=="_internal" (
         echo Deleting folder: %%D

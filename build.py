@@ -29,8 +29,7 @@ DATA_FOLDERS = [
 
 # Additional files to copy
 ADDITIONAL_FILES = [
-    "index.html",
-    "requirements.txt"
+    "update.exe"
 ]
 
 def clean_build_directories():

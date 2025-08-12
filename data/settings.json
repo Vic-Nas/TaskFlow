@@ -1,13 +1,13 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 26,
+    "version": 27,
     "new": {
         "fix": [
             "No click Info."
         ],
         "add": [
-            "Ask if changes should be saved."
+            "Add update loading window."
         ]
     },
     "niceUser": true

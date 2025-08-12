@@ -22,7 +22,12 @@ def getSetting(key):
 def updateWindows():
     import urllib.request
     import json
+    import tkinter as tk
+    from tkinter import ttk
+    import time
+    import threading
     
+    # Main function logic - check for updates first
     newDetails = {}
     try:
         # Get local version
@@ -53,87 +58,203 @@ def updateWindows():
     except (urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError, Exception):
         return
     
+    # Show update confirmation dialog (this needs to work without main UI)
     fixes = "\n".join(newDetails["fix"])
     added = "\n".join(newDetails["add"])
-    alert([f"{fixes}", f"{added}"], title = "Confirm update:", headings = ["Fixes", "Added"])
     
-    tempDir = os.path.abspath("tempUpdate")
-    backupDir = os.path.abspath("backup")
+    # Create temporary root for confirmation dialog
+    tempRoot = tk.Tk()
+    tempRoot.withdraw()  # Hide the root window
     
-    # Get the actual executable path (works for both .py and .exe)
-    if getattr(sys, 'frozen', False):
-        # Running as compiled exe
-        currentExePath = sys.executable
-        appDir = os.path.dirname(currentExePath)
-    else:
-        # Running as python script
-        currentExePath = os.path.abspath(sys.argv[0])
-        appDir = os.path.dirname(currentExePath)
+    try:
+        # Show confirmation using messagebox
+        import tkinter.messagebox as msgbox
+        
+        updateText = f"Update Available!\n\nFixes:\n{fixes}\n\nAdded:\n{added}\n\nDo you want to update now?"
+        userConfirmed = msgbox.askyesno("TaskFlow Update", updateText, parent=tempRoot)
+        
+        if not userConfirmed:
+            tempRoot.destroy()
+            return
+        
+    except Exception:
+        tempRoot.destroy()
+        return
     
-    exeName = os.path.basename(currentExePath)
+    # User confirmed - now show loading dialog during update
+    def createLoadingWindow():
+        """Create standalone loading window"""
+        loadingRoot = tk.Tk()
+        loadingRoot.title("TaskFlow Update")
+        loadingRoot.geometry("400x180")
+        loadingRoot.resizable(False, False)
+        
+        # Center the window
+        loadingRoot.update_idletasks()
+        x = (loadingRoot.winfo_screenwidth() // 2) - (400 // 2)
+        y = (loadingRoot.winfo_screenheight() // 2) - (180 // 2)
+        loadingRoot.geometry(f"400x180+{x}+{y}")
+        
+        # Disable window close button
+        loadingRoot.protocol("WM_DELETE_WINDOW", lambda: None)
+        
+        # Icon and styling
+        try:
+            loadingRoot.iconbitmap("icon.ico")  # Adjust path as needed
+        except:
+            pass
+        
+        # Add content
+        titleLabel = tk.Label(loadingRoot, text="Updating TaskFlow", 
+                              font=("Arial", 16, "bold"), fg="#2c3e50")
+        titleLabel.pack(pady=20)
+        
+        statusLabel = tk.Label(loadingRoot, text="Initializing update...", 
+                               font=("Arial", 11), fg="#34495e")
+        statusLabel.pack(pady=10)
+        
+        progressBar = ttk.Progressbar(loadingRoot, mode='indeterminate', length=300)
+        progressBar.pack(pady=15)
+        progressBar.start()
+        
+        infoLabel = tk.Label(loadingRoot, text="Please wait - TaskFlow will restart automatically", 
+                             font=("Arial", 9), fg="#7f8c8d")
+        infoLabel.pack(pady=5)
+        
+        return loadingRoot, statusLabel
     
-    # Create temp and backup dirs
-    os.makedirs(tempDir, exist_ok=True)
-    os.makedirs(backupDir, exist_ok=True)
-    
-    # Create batch script FIRST, then update version after successful download
-    batScript = f"""@echo off
-echo Update started - Local version: {localVersion}, Repository version: {repoVersion} > update.log
+    def performUpdateWithUi():
+        """Perform update with UI feedback"""
+        # Create loading window
+        loadingRoot, statusLabel = createLoadingWindow()
+        
+        def updateStatus(message):
+            """Update status message"""
+            statusLabel.config(text=message)
+            loadingRoot.update()
+            time.sleep(0.8)  # Give user time to read the message
+        
+        def doUpdate():
+            """Actual update process"""
+            try:
+                updateStatus("Preparing update environment...")
+                
+                tempDir = os.path.abspath("tempUpdate")
+                backupDir = os.path.abspath("backup")
+                
+                # Get the actual executable path
+                if getattr(sys, 'frozen', False):
+                    currentExePath = sys.executable
+                else:
+                    currentExePath = os.path.abspath(sys.argv[0])
+                
+                exeName = os.path.basename(currentExePath)
+                
+                # Create directories
+                os.makedirs(tempDir, exist_ok=True)
+                os.makedirs(backupDir, exist_ok=True)
+                
+                updateStatus("Creating installation script...")
+                
+                # Create batch script
+                batScript = f"""@echo off
+echo TaskFlow Update Process Started > update.log
+echo ====================================== >> update.log
+echo Local version: {localVersion} >> update.log
+echo Repository version: {repoVersion} >> update.log
+echo Update time: %date% %time% >> update.log
+echo. >> update.log
 
-echo Creating backup... >> update.log
+echo [%time%] Step 1: Creating backup... >> update.log
 copy "{currentExePath}" "{backupDir}\\{exeName}.bak" >> update.log 2>&1
 if errorlevel 1 (
-    echo Backup failed, aborting update >> update.log
+    echo [%time%] ERROR: Backup failed, aborting update >> update.log
+    pause
     goto :cleanup
 )
+echo [%time%] Backup created successfully >> update.log
 
-echo Downloading TaskFlow.exe... >> update.log
-powershell -WindowStyle Hidden -Command "try {{ Invoke-WebRequest -Uri 'https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow/TaskFlow.exe' -OutFile '{tempDir}\\TaskFlow.exe' -TimeoutSec 30 }} catch {{ exit 1 }}" >> update.log 2>&1
+echo [%time%] Step 2: Downloading new version... >> update.log
+powershell -WindowStyle Hidden -Command "try {{ Write-Host 'Downloading...'; Invoke-WebRequest -Uri 'https://github.com/Vic-Nas/TaskFlow/raw/main/build/dist/TaskFlow/TaskFlow.exe' -OutFile '{tempDir}\\TaskFlow.exe' -TimeoutSec 30; Write-Host 'Download complete' }} catch {{ Write-Host 'Download failed'; exit 1 }}" >> update.log 2>&1
 if errorlevel 1 (
-    echo Download failed >> update.log
+    echo [%time%] ERROR: Download failed >> update.log
     goto :cleanup
 )
+echo [%time%] Download completed successfully >> update.log
 
-echo Waiting for app to close... >> update.log
+echo [%time%] Step 3: Waiting for application to close... >> update.log
 timeout /t 3 /nobreak > nul
 
-echo Installing update... >> update.log
+echo [%time%] Step 4: Installing update... >> update.log
 copy /y "{tempDir}\\TaskFlow.exe" "{currentExePath}" >> update.log 2>&1
 if errorlevel 1 (
-    echo Installation failed, restoring backup >> update.log
+    echo [%time%] ERROR: Installation failed, restoring backup >> update.log
     copy /y "{backupDir}\\{exeName}.bak" "{currentExePath}" >> update.log 2>&1
+    if errorlevel 1 (
+        echo [%time%] CRITICAL ERROR: Backup restoration failed! >> update.log
+    )
     goto :cleanup
 )
+echo [%time%] Update installed successfully >> update.log
 
-echo Update successful, starting application... >> update.log
+echo [%time%] Step 5: Starting updated application... >> update.log
 start "" "{currentExePath}"
+echo [%time%] Application restarted >> update.log
 
 :cleanup
-echo Cleaning up... >> update.log
-if exist "{tempDir}" rmdir /s /q "{tempDir}" >> update.log 2>&1
-echo Update finished >> update.log
+echo [%time%] Cleaning up temporary files... >> update.log
+if exist "{tempDir}" (
+    rmdir /s /q "{tempDir}" >> update.log 2>&1
+    echo [%time%] Temporary directory cleaned >> update.log
+)
+echo [%time%] Update process completed >> update.log
+echo ====================================== >> update.log
+
+timeout /t 2 /nobreak > nul
 del "%~0"
 """
+                
+                batPath = os.path.join(os.path.dirname(currentExePath), "update.bat")
+                
+                updateStatus("Writing installation script...")
+                with open(batPath, "w") as batFile:
+                    batFile.write(batScript)
+                
+                updateStatus("Updating version information...")
+                try:
+                    setSetting("version", repoVersion)
+                except:
+                    pass
+                
+                updateStatus("Launching update process...")
+                
+                # Launch batch file
+                subprocess.Popen([batPath], cwd=os.path.dirname(currentExePath), 
+                               creationflags=subprocess.CREATE_NO_WINDOW)
+                
+                updateStatus("TaskFlow will restart in 3 seconds...")
+                time.sleep(3)
+                
+                # Close loading window and exit
+                loadingRoot.destroy()
+                tempRoot.destroy()
+                sys.exit(0)
+                
+            except Exception as e:
+                updateStatus(f"Update failed: {str(e)}")
+                time.sleep(3)
+                loadingRoot.destroy()
+                tempRoot.destroy()
+        
+        # Start update in thread to keep UI responsive
+        updateThread = threading.Thread(target=doUpdate, daemon=True)
+        updateThread.start()
+        
+        # Run loading window
+        loadingRoot.mainloop()
     
-    batPath = os.path.join(os.path.dirname(currentExePath), "update.bat")
-    
-    with open(batPath, "w") as batFile:
-        batFile.write(batScript)
-    
-    # Update version only AFTER successful batch creation
-    # The new version will update its own settings when it starts
-    try:
-        # Only update if we got this far successfully
-        setSetting("version", repoVersion)
-    except:
-        # If setting fails, don't abort the update
-        pass
-    
-    # Launch batch silently and exit current process
-    subprocess.Popen([batPath], cwd=os.path.dirname(currentExePath), creationflags=subprocess.CREATE_NO_WINDOW)
-    
-    # Exit current process to avoid relaunch loop
-    sys.exit(0)
+    # Start the update process
+    performUpdateWithUi()
     
 
 def centerWin(window):

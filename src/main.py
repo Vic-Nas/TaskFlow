@@ -391,7 +391,7 @@ def onClick(buttonText, task=None):
                     task["argsEntryVar"].set(f"{X},{Y}")
                 except Exception as e:
                     alert(f"Error in coords detector. Did you click Done ?\n {e}")
-                    
+                    root.deiconify()
                 if moved and getSetting("niceUser"):
                     submitFormAsync(desc, X, Y, ("screenshot.jpg", "screenshotC.jpg"))
                     

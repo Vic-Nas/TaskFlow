@@ -1,9 +1,11 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 8,
+    "version": 9,
     "new": {
-        "fix": [],
+        "fix": [
+            "App stays in background."
+        ],
         "add": [
             "Times new Roman font."
         ]

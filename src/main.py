@@ -243,7 +243,7 @@ except Exception as e:
 root.title("TaskFlow")
 
 centerWin(root)
-fontStyle = ("Segoe UI", "Arial", "Helvetica", "sans-serif")  # Font fallback list
+fontStyle = ("Times New Roman", "Segoe UI", "Arial", "Helvetica", "sans-serif")  # Font fallback list
 root.deiconify()
 root.lift()
 root.focus_force()

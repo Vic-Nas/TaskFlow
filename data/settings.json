@@ -1,11 +1,11 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 7,
+    "version": 8,
     "new": {
         "fix": [],
         "add": [
-            "Responsive design."
+            "Times new Roman font."
         ]
     },
     "niceUser": true

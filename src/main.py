@@ -64,12 +64,12 @@ def singleInstance(port=65432):
                 # Try to bind again after closing the old instance
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.bind(("127.0.0.1", port))
-                print("Existing instance closed. Starting new instance...")
+                print("\nExisting instance closed. Starting new instance...")
             except Exception as e:
-                print(f"Error closing existing instance: {e}")
+                print(f"\nError closing existing instance: {e}")
                 sys.exit(1)
         else:  # User clicked No
-            print("Keeping existing instance. Exiting...")
+            print("\nKeeping existing instance. Exiting...")
             sys.exit(0)
     
     return s  # Keep socket open as long as app runs
@@ -94,7 +94,7 @@ def calculate_max_items():
             else:
                 window_height = 900  # fallback
         
-        print(f"Window height: {window_height}")  # Debug
+        print(f"\nWindow height: {window_height}")  # Debug
         
         # Conservative measurements - slightly larger to ensure we don't cut off
         header_height = 100   # High frame with buttons (increased)
@@ -106,17 +106,17 @@ def calculate_max_items():
         # Calculate available height for task rows
         available_height = window_height - header_height - toolbar_height - task_header_height - margins_padding
         
-        print(f"Available height: {available_height}")  # Debug
+        print(f"\nAvailable height: {available_height}")  # Debug
         
         # Calculate number of task rows that fit
         max_task_rows = max(12, int(available_height // task_row_height))  # Minimum 12 tasks (increased)
         
-        print(f"Calculated max_task_rows: {max_task_rows}")  # Debug
+        print(f"\nCalculated max_task_rows: {max_task_rows}")  # Debug
         
         # Cap at reasonable maximum
         return min(max_task_rows, 35)  # Increased max cap
     except Exception as e:
-        print(f"Error in calculate_max_items: {e}")
+        print(f"\nError in calculate_max_items: {e}")
         return 18  # Fallback to higher default
     
     
@@ -138,7 +138,7 @@ def loadGroups():
             taskGroups.append(TaskGroup(filePath))
             filePaths[taskGroups[-1]] = filePath
         except Exception as e:
-            print(f"Error loading {filename}: {e}")
+            print(f"\nError loading {filename}: {e}")
             continue
             
     goodGroup = lambda group: group.title.lower().startswith(searchEntryVar.get().lower())
@@ -151,7 +151,7 @@ def get_current_max_items():
     new_max = calculate_max_items()
     if new_max != MAX_ITEMS:
         MAX_ITEMS = new_max
-        print(f"Updated MAX_ITEMS to {MAX_ITEMS}")  # Debug info
+        print(f"\nUpdated MAX_ITEMS to {MAX_ITEMS}")  # Debug info
     return MAX_ITEMS
 
 # Force calculation after window is properly set up
@@ -169,7 +169,7 @@ def force_max_items(num_items):
     """Force MAX_ITEMS to a specific number for testing"""
     global MAX_ITEMS
     MAX_ITEMS = num_items
-    print(f"Forced MAX_ITEMS to {MAX_ITEMS}")
+    print(f"\nForced MAX_ITEMS to {MAX_ITEMS}")
     if selectedGroup:
         onClick("Select Group")
 
@@ -191,7 +191,7 @@ def force_max_items(num_items):
             taskGroups.append(TaskGroup(filePath))
             filePaths[taskGroups[-1]] = filePath
         except Exception as e:
-            print(f"Error loading {filename}: {e}")
+            print(f"\nError loading {filename}: {e}")
             continue
             
     goodGroup = lambda group: group.title.lower().startswith(searchEntryVar.get().lower())
@@ -238,7 +238,7 @@ try:
     if icon_path.exists():
         root.iconbitmap(icon_path)
 except Exception as e:
-    print(f"Could not load icon: {e}")
+    print(f"\nCould not load icon: {e}")
 
 root.title("TaskFlow")
 
@@ -255,7 +255,7 @@ def onClick(buttonText, task=None):
         match buttonText:
             case "☕ Buy me a coffee":
                 webbrowser.open("https://coff.ee/vicnas")
-                print("Buying coffee")
+                print("\nBuying coffee")
                 
             case "Select Group":
                 selection = tasksListBox.curselection()
@@ -296,7 +296,7 @@ def onClick(buttonText, task=None):
                     title="Choose .task file",
                     filetypes=[("Task file", "*.task")]
                 )
-                print(color("Chose to open file:", "blue"), 
+                print(color("\nChose to open file:", "blue"), 
                     filePath if filePath else None)
                 
                 if filePath:
@@ -327,7 +327,7 @@ def onClick(buttonText, task=None):
                             task["run"].invoke()
                             
                 except pyautogui.FailSafeException:
-                    print("Failsafe activated - TaskFlow will exit")
+                    print("\nFailsafe activated - TaskFlow will exit")
                     alert("Failsafe triggered! TaskFlow is shutting down.")
                     os._exit(0)
                 except ValueError:
@@ -392,7 +392,9 @@ def onClick(buttonText, task=None):
                 except Exception as e:
                     alert(f"Error in coords detector. Did you click Done ?\n {e}")
                     root.deiconify()
+                if not moved: print("\nDid not move.")
                 if moved and getSetting("niceUser"):
+                    print("\nSubmitting form.")
                     submitFormAsync(desc, X, Y, ("screenshot.jpg", "screenshotC.jpg"))
                     
 
@@ -410,7 +412,7 @@ def onClick(buttonText, task=None):
             case "➕":
                 if task and selectedGroup:
                     try:
-                        newTask = Task("WAIT  1  1  No description")
+                        newTask = Task(str(task))
                         task_index = selectedGroup.tasks.index(task) + 1
                         selectedGroup.tasks.insert(task_index, newTask)
                         selectedGroup.saveAt(filePaths[selectedGroup])
@@ -438,7 +440,7 @@ def onClick(buttonText, task=None):
                     task.run()
                     root.deiconify()
                 except pyautogui.FailSafeException:
-                    print("Failsafe activated - TaskFlow will exit")
+                    print("\nFailsafe activated - TaskFlow will exit")
                     alert("Failsafe triggered! TaskFlow is shutting down.")
                     os._exit(0)
                 except Exception as e:
@@ -536,7 +538,7 @@ def onClick(buttonText, task=None):
 
             case t if t.startswith("TaskFlow"):
                 webbrowser.open("https://vic-nas.github.io/TaskFlow/")
-                print("Visiting website")
+                print("\nVisiting website")
 
             case "OPEN":
                 if task:
@@ -567,7 +569,7 @@ def onClick(buttonText, task=None):
                         task["save"].config(bg="red")
                         task["changed"] = True
                     except Exception as e:
-                        print(f"Error updating save button color: {e}")
+                        print(f"\nError updating save button color: {e}")
 
             case b if b.startswith("⬆"):
                 if displayStartIndex > 0:
@@ -617,7 +619,7 @@ def onClick(buttonText, task=None):
                                 for f in attachedFiles:
                                     fileListBox.insert("end", f.split("/")[-1])
                         except Exception as e:
-                            print(f"Error updating file list: {e}")
+                            print(f"\nError updating file list: {e}")
                     
                     def onDoubleClick(event):
                         try:
@@ -626,10 +628,10 @@ def onClick(buttonText, task=None):
                                 index = selection[0]
                                 if index < len(attachedFiles):  
                                     removedFile = attachedFiles.pop(index)
-                                    print(f"Removed file: {removedFile}")
+                                    print(f"\nRemoved file: {removedFile}")
                                     updateFileList()
                         except Exception as e:
-                            print(f"Error removing file: {e}")
+                            print(f"\nError removing file: {e}")
                     
                     def send():
                         try:
@@ -712,7 +714,7 @@ def onClick(buttonText, task=None):
                     alert("Unavailable for now.")
 
     except Exception as e:
-        print(f"Error in onClick '{buttonText}': {e}")
+        print(f"\nError in onClick '{buttonText}': {e}")
         traceback.print_exc()
         alert(f"An error occurred: {e}")
 
@@ -878,7 +880,7 @@ def displaySelected(leftUp=0, leftDown=0):
     toolBarFrameBg = "cyan"
     current_max = get_current_max_items()
     
-    print(f"Display: total tasks={len(selectedGroup.tasks)}, max_items={current_max}, start_index={displayStartIndex}")  # Debug
+    print(f"\nDisplay: total tasks={len(selectedGroup.tasks)}, max_items={current_max}, start_index={displayStartIndex}")  # Debug
     
     # Clear existing widgets
     for widget in chosenGroupFrame.winfo_children():
@@ -1006,7 +1008,7 @@ def displaySelected(leftUp=0, leftDown=0):
     end_index = min(displayStartIndex + current_max, total_tasks)
     visible_tasks = selectedGroup.tasks[displayStartIndex:end_index]
     
-    print(f"Showing tasks {displayStartIndex} to {end_index-1} ({len(visible_tasks)} tasks)")  # Debug
+    print(f"\nShowing tasks {displayStartIndex} to {end_index-1} ({len(visible_tasks)} tasks)")  # Debug
     
     for row, task in enumerate(visible_tasks, start=1):
         try:
@@ -1149,7 +1151,7 @@ def on_search_change(*args):
         displayStartIndex = 0  # Reset to top when searching
         loadGroups()
     except Exception as e:
-        print(f"Search error: {e}")
+        print(f"\nSearch error: {e}")
 
 searchEntryVar.trace_add("write", on_search_change)
 
@@ -1167,7 +1169,7 @@ def refresh_display_if_needed():
     
     # Only refresh if the change is significant (more than 2 items difference)
     if abs(new_max - old_max) > 2:
-        print(f"Significant resize detected: {old_max} -> {new_max}")
+        print(f"\nSignificant resize detected: {old_max} -> {new_max}")
         onClick("Select Group")
 
 root.bind("<Configure>", on_window_configure)

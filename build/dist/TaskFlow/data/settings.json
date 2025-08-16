@@ -1,13 +1,15 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 9,
+    "version": 10,
     "new": {
         "fix": [
-            "App stays in background."
+            "AI data not transmissed.",
+            "Ugly logs"
         ],
         "add": [
-            "Times new Roman font."
+            "+ button copies the task.",
+            "Logs on form filling."
         ]
     },
     "niceUser": true

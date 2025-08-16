@@ -248,17 +248,20 @@ def alert(content, headings = None, bg = "#222", fg = "#fff", title = "Info", se
     
 
 def uploadImageToImgbb(imagePath):
+    print("\nTrying to upload.")
     with open(imagePath, "rb") as file:
         url = "https://api.imgbb.com/1/upload"
         response = requests.post(url, files={"image": file}, data={"key": IMGBB_API_KEY})
         if response.status_code == 200:
             jsonResp = response.json()
             if jsonResp['success']:
+                print("\nSuccess:", jsonResp['data']['url'])
                 return jsonResp['data']['url']  # direct image link
             else:
                 raise Exception("Upload failed: " + str(jsonResp))
         else:
             raise Exception(f"HTTP Error: {response.status_code}")
+
 
 def submitForm(description: str, xCoord: float, yCoord: float, imagePaths: tuple[str]) -> bool:
     links = []
@@ -271,6 +274,8 @@ def submitForm(description: str, xCoord: float, yCoord: float, imagePaths: tuple
     data["entry.1253928474"] = str(yCoord)
     data["entry.114537537"] = ",".join(links)
 
+    print("\n", data)
+
     response = requests.post(FORM_URL, data=data)
     return response.status_code == 200
 
@@ -278,8 +283,8 @@ def submitFormAsync(description: str, xCoord: float, yCoord: float, imagePaths: 
     """Non-blocking version of submitForm"""
     def backgroundSubmit():
         try:
-            submitForm(description, xCoord, yCoord, imagePaths)
+            print("\nSuccess ?:", submitForm(description, xCoord, yCoord, imagePaths))
         except Exception as e:
-            print(f"Submit error: {e}")  # or however you want to handle errors
+            print(f"\nSubmit error: {e}")  # or however you want to handle errors
     
     threading.Thread(target=backgroundSubmit, daemon=True).start()

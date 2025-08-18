@@ -1,11 +1,10 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 10,
+    "version": 11,
     "new": {
         "fix": [
-            "AI data not transmissed.",
-            "Ugly logs"
+            "One instance only not working."
         ],
         "add": [
             "+ button copies the task.",

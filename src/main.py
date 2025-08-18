@@ -9,8 +9,9 @@ from imports.automate.detectCoords import SimpleCircleOverlay
 
 from pymsgbox import prompt
 from imports.utils import alert
-import tkinter, sys, pyautogui, os, socket
+import tkinter, sys, pyautogui, os, socket, psutil
 from imports.mail import sendFeedBackMail
+from time import sleep
 
 
 overlay = None
@@ -21,61 +22,141 @@ displayStartIndex = 0
 
 def singleInstance(port=65432):
     """Prevent multiple instances by binding a local TCP port."""
-    import socket
-    import sys
-    import tkinter as tk
-    from tkinter import messagebox
-    import psutil
     
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        s.bind(("127.0.0.1", port))
-    except socket.error:
-        # Application is already running, show dialog
-        root = tk.Tk()
-        root.withdraw()  # Hide the main window
-        
-        result = messagebox.askyesno(
-            "Application Already Running",
-            "Another instance of this application is already running.\n\nDo you want to close the existing instance and start a new one?",
-            icon="question"
-        )
-        
-        root.destroy()
-        
-        if result:  # User clicked Yes
+    def show_dialog_safely():
+        """Show dialog with proper error handling."""
+        try:
+            # Create root window with proper setup
+            root = tkinter.Tk()
+            root.withdraw()  # Hide immediately
+            root.attributes('-topmost', True)  # Bring to front
+            
+            # Force window to be processed
+            root.update_idletasks()
+            
+            # Show dialog without grab if there are grab conflicts
             try:
-                # Find and terminate the process using the port
-                for conn in psutil.net_connections():
-                    if conn.laddr.port == port and conn.status == psutil.CONN_LISTEN:
-                        try:
-                            process = psutil.Process(conn.pid)
-                            process.terminate()  # Graceful termination
-                            process.wait(timeout=5)  # Wait up to 5 seconds
-                            break
-                        except (psutil.NoSuchProcess, psutil.TimeoutExpired):
-                            # If graceful termination fails, force kill
-                            try:
-                                process.kill()
-                            except psutil.NoSuchProcess:
-                                pass
-                            break
-                
-                # Try to bind again after closing the old instance
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.bind(("127.0.0.1", port))
-                print("\nExisting instance closed. Starting new instance...")
-            except Exception as e:
-                print(f"\nError closing existing instance: {e}")
-                sys.exit(1)
-        else:  # User clicked No
-            print("\nKeeping existing instance. Exiting...")
-            sys.exit(0)
+                result = messagebox.askyesno(
+                    "Application Already Running",
+                    "Another instance of this application is already running.\n\n"
+                    "Do you want to close the existing instance and start a new one?",
+                    icon="question"
+                )
+            except tkinter.TclError as e:
+                if "grab failed" in str(e):
+                    # Fallback: show without grab
+                    print("\nApplication Already Running")
+                    print("Another instance is already running.")
+                    response = input("Close existing instance and start new? (y/n): ").lower()
+                    result = response in ['y', 'yes']
+                else:
+                    raise
+            
+            root.destroy()
+            return result
+            
+        except Exception as e:
+            print(f"Error showing dialog: {e}")
+            # Fallback to console input
+            print("\nApplication Already Running")
+            print("Another instance is already running.")
+            try:
+                response = input("Close existing instance and start new? (y/n): ").lower()
+                return response in ['y', 'yes']
+            except (KeyboardInterrupt, EOFError):
+                return False
     
-    return s  # Keep socket open as long as app runs
-
-# ---- Usage ----
-lock_socket = singleInstance()
+    def close_existing_instance(port):
+        """Close existing instance using the port."""
+        if not psutil:
+            print("psutil not available. Cannot automatically close existing instance.")
+            return False
+        
+        try:
+            # Find process using the port
+            for conn in psutil.net_connections():
+                if (conn.laddr.port == port and 
+                    conn.status == psutil.CONN_LISTEN and 
+                    conn.laddr.ip in ['127.0.0.1', '0.0.0.0']):
+                    
+                    try:
+                        process = psutil.Process(conn.pid)
+                        print(f"Found existing process (PID: {conn.pid}). Terminating...")
+                        
+                        # Graceful termination
+                        process.terminate()
+                        
+                        # Wait for process to end
+                        try:
+                            process.wait(timeout=5)
+                            print("Existing process terminated gracefully.")
+                        except psutil.TimeoutExpired:
+                            print("Graceful termination timed out. Force killing...")
+                            process.kill()
+                            process.wait(timeout=2)
+                            print("Existing process force killed.")
+                        
+                        # Give system time to release the port
+                        sleep(1)
+                        return True
+                        
+                    except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
+                        print(f"Could not terminate process: {e}")
+                        return False
+            
+            print("No process found using the port.")
+            return False
+            
+        except Exception as e:
+            print(f"Error closing existing instance: {e}")
+            return False
+    
+    def try_bind_socket(port, max_attempts=3):
+        """Try to bind socket with retries."""
+        for attempt in range(max_attempts):
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.bind(("127.0.0.1", port))
+                return s
+            except socket.error as e:
+                s.close()  # Make sure socket is closed
+                if attempt < max_attempts - 1:
+                    print(f"Bind attempt {attempt + 1} failed, retrying...")
+                    sleep(1)
+                else:
+                    raise e
+        return None
+    
+    # Main logic
+    try:
+        # First attempt to bind
+        return try_bind_socket(port)
+        
+    except socket.error as e:
+        print(f"Port {port} is in use. Another instance may be running.")
+        
+        # Show dialog to user
+        user_wants_to_close = show_dialog_safely()
+        
+        if user_wants_to_close:
+            print("Attempting to close existing instance...")
+            
+            if close_existing_instance(port):
+                # Try to bind again after closing
+                try:
+                    socket_obj = try_bind_socket(port)
+                    print("New instance started successfully.")
+                    return socket_obj
+                except socket.error as bind_error:
+                    print(f"Failed to start new instance: {bind_error}")
+                    sys.exit(1)
+            else:
+                print("Failed to close existing instance.")
+                sys.exit(1)
+        else:
+            print("Keeping existing instance. Exiting...")
+            sys.exit(0)
 
 
 def calculate_max_items():

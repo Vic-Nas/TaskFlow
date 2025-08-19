@@ -1,15 +1,13 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 11,
+    "version": 13,
     "new": {
         "fix": [
-            "One instance only not working."
+            "One instance only not working.",
+            "Countdown bug."
         ],
-        "add": [
-            "+ button copies the task.",
-            "Logs on form filling."
-        ]
+        "add": []
     },
     "niceUser": true
 }

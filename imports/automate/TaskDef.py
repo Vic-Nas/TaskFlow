@@ -22,7 +22,7 @@ import time
 import tkinter as tk
 import time
 
-def wait(seconds, display = True, color = "red", size = 120):
+def wait(seconds, display=True, color="red", size=120, parent=None):
     """Visual countdown with big floating numbers"""
     
     if not display:
@@ -34,39 +34,48 @@ def wait(seconds, display = True, color = "red", size = 120):
     totalSeconds = seconds
     wholeSeconds = int(seconds)
     
-    rootWindow = tk.Tk()
-    rootWindow.overrideredirect(True)  # Remove window decorations
-    rootWindow.attributes('-topmost', True)  # Always visible
-    rootWindow.attributes('-transparentcolor', 'black')  # Make black transparent
+    # Use Toplevel instead of creating a new root
+    if parent is None:
+        # If no parent provided, get the default root
+        parent = tk._default_root
+        if parent is None:
+            # If no root exists at all, create one (but this shouldn't happen in your app)
+            parent = tk.Tk()
+            parent.withdraw()
+    
+    countdownWindow = tk.Toplevel(parent)
+    countdownWindow.overrideredirect(True)  # Remove window decorations
+    countdownWindow.attributes('-topmost', True)  # Always visible
+    countdownWindow.attributes('-transparentcolor', 'black')  # Make black transparent
     
     # Window size adapted to font size
     windowWidth = int(size * 3.5)
     windowHeight = int(size * 2.5)
-    rootWindow.geometry(f"{windowWidth}x{windowHeight}")
+    countdownWindow.geometry(f"{windowWidth}x{windowHeight}")
     
     # Center window on screen
-    screenWidth = rootWindow.winfo_screenwidth()
-    screenHeight = rootWindow.winfo_screenheight()
+    screenWidth = countdownWindow.winfo_screenwidth()
+    screenHeight = countdownWindow.winfo_screenheight()
     posX = (screenWidth - windowWidth) // 2
     posY = (screenHeight - windowHeight) // 2
-    rootWindow.geometry(f"{windowWidth}x{windowHeight}+{posX}+{posY}")
+    countdownWindow.geometry(f"{windowWidth}x{windowHeight}+{posX}+{posY}")
     
     # Black background (will be transparent)
-    rootWindow.configure(bg = 'black')
+    countdownWindow.configure(bg='black')
     
     # Label for the number with transparent background
-    numberLabel = tk.Label(rootWindow, 
-                          text = "", 
-                          font = ("Arial", size, "bold"), 
-                          fg = color, 
-                          bg = "black")  # Black = transparent
-    numberLabel.pack(expand = True)
+    numberLabel = tk.Label(countdownWindow, 
+                          text="", 
+                          font=("Arial", size, "bold"), 
+                          fg=color, 
+                          bg="black")  # Black = transparent
+    numberLabel.pack(expand=True)
     
     # Display countdown
     if wholeSeconds > 0:
         for currentNumber in range(wholeSeconds, 0, -1):
-            numberLabel.config(text = str(currentNumber))
-            rootWindow.update()
+            numberLabel.config(text=str(currentNumber))
+            countdownWindow.update()
             time.sleep(1)
     
     # Handle remaining decimal part
@@ -76,7 +85,7 @@ def wait(seconds, display = True, color = "red", size = 120):
             time.sleep(remainingTime)
     
     # Close automatically
-    rootWindow.destroy()
+    countdownWindow.destroy()
 
 
 

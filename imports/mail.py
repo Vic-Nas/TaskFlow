@@ -42,7 +42,7 @@ TaskFlow Team"""
 
 def sendFeedBackMail(email, text, *filePaths, subject = ""):
     senderMail = "taskflow.vicnas@gmail.com"
-    senderPassword = "esic proi dgxi piws"
+    senderPassword = MAIL_KEY
     smtpServer = "smtp.gmail.com"
     smtpPort = 587
     if not subject:

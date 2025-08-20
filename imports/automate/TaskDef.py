@@ -16,8 +16,8 @@ def openFile(path):
         subprocess.run(['xdg-open', path])
         
 import tkinter as tk
-import time, win32gui
-
+import time
+import ctypes
 
 def wait(seconds, display=True, description="Waiting", color="red", size=120, parent=None):
     """Visual countdown with big floating numbers"""
@@ -26,13 +26,13 @@ def wait(seconds, display=True, description="Waiting", color="red", size=120, pa
         time.sleep(seconds)
         return
     
-    # Save current focus before creating countdown window
+    # Save current focus using ctypes (should work better with PyInstaller)
     focused_window = None
-    if win32gui:
-        try:
-            focused_window = win32gui.GetForegroundWindow()
-        except:
-            pass
+    try:
+        user32 = ctypes.windll.user32
+        focused_window = user32.GetForegroundWindow()
+    except:
+        pass
     
     # Handle float seconds
     isFloat = isinstance(seconds, float)
@@ -100,10 +100,11 @@ def wait(seconds, display=True, description="Waiting", color="red", size=120, pa
     # Close automatically
     countdownWindow.destroy()
     
-    # Restore focus to the window that had it before
-    if win32gui and focused_window:
+    # Restore focus using ctypes
+    if focused_window:
         try:
-            win32gui.SetForegroundWindow(focused_window)
+            user32 = ctypes.windll.user32
+            user32.SetForegroundWindow(focused_window)
         except:
             pass
 

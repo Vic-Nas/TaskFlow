@@ -1,0 +1,32 @@
+#Check-in Freecash
+#nasci.victorio@icloud.com
+#ACTION  PARAMS  TIMES  Desc
+
+KEY  win 1  1  Open Edge
+
+WAIT  3.0 False  1  Wait for opening
+
+TYPE  freecash  1  Type Freecash
+
+KEY  enter  1  Press enter
+
+WAIT  11.0  1  Wait for page to load
+
+KEY  fn f11  1  Full Screen
+
+WAIT  1.0 False  1  Wait for full
+
+WAIT  1.0 False  1  Wait for click
+
+LCLICK  1679.0 605.0  1  Click Claim Case Button
+
+WAIT  10.0 False  1  Wait for click
+
+LCLICK  955.0 448.0  1  Click open case button
+
+WAIT  10.0 False  1  Wait for case to open
+
+LCLICK  954.0 446.0  1  Close case
+
+KEY  ctrl w  1  Fermer onglet
+

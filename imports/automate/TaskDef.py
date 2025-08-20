@@ -34,6 +34,9 @@ import time
 import tkinter as tk
 import time
 
+import tkinter as tk
+import time
+
 def wait(seconds, display=True, description="Waiting", color="red", size=120, parent=None):
     """Visual countdown with big floating numbers"""
     
@@ -58,6 +61,10 @@ def wait(seconds, display=True, description="Waiting", color="red", size=120, pa
         countdownWindow = tk.Toplevel(parent)
         countdownWindow.overrideredirect(True)  # Remove window decorations
         countdownWindow.attributes('-topmost', True)  # Always visible
+        
+        # CRITICAL: Prevent focus stealing
+        countdownWindow.wm_attributes('-disabled', True)  # Make it non-interactive
+        
         countdownWindow.attributes('-transparentcolor', 'black')  # Make black transparent
         
         # Window size adapted to font size

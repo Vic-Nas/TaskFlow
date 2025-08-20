@@ -5,7 +5,7 @@ from collections import defaultdict
 
 matchAction = defaultdict(lambda *args: None)
 
-import os, platform, subprocess, win32gui, win32process
+import os, platform, subprocess
 
 def openFile(path):
     if platform.system() == 'Windows':

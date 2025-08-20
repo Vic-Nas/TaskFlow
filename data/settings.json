@@ -1,7 +1,7 @@
 {
     "email": "",
     "coloredLogs": false,
-    "version": 24,
+    "version": 25,
     "new": {
         "fix": [
             "One instance only not working.",

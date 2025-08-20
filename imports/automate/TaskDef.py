@@ -16,11 +16,8 @@ def openFile(path):
         subprocess.run(['xdg-open', path])
         
 import tkinter as tk
-import time
-try:
-    import win32gui
-except ImportError:
-    win32gui = None
+import time, win32gui
+
 
 def wait(seconds, display=True, description="Waiting", color="red", size=120, parent=None):
     """Visual countdown with big floating numbers"""

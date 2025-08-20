@@ -835,7 +835,7 @@ for i in range(6):
     highFrame.grid_columnconfigure(i, weight=0)
 highFrame.grid_columnconfigure(1, weight=1)  # Email label expands
 
-version = str(getSetting("version"))[:3]
+version = ".".join(list(str(getSetting("version"))[:3]))
 
 taskFlowButton = MyButton(
     highFrame, 

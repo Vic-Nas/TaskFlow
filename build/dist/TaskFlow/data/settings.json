@@ -1,0 +1,13 @@
+{
+    "email": "",
+    "coloredLogs": false,
+    "version": 14,
+    "new": {
+        "fix": [
+            "One instance only not working.",
+            "Countdown bug."
+        ],
+        "add": []
+    },
+    "niceUser": true
+}

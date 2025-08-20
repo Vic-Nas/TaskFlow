@@ -31,6 +31,9 @@ import time
 import tkinter as tk
 import time
 
+import tkinter as tk
+import time
+
 def wait(seconds, display=True, description="Waiting", color="red", size=120, parent=None):
     """Visual countdown with big floating numbers"""
     
@@ -43,103 +46,70 @@ def wait(seconds, display=True, description="Waiting", color="red", size=120, pa
     totalSeconds = seconds
     wholeSeconds = int(seconds)
     
-    # Get or create parent window
+    # Use parent or get default root
     if parent is None:
-        try:
-            parent = tk._default_root
-            if parent is None:
-                # Create minimal root window
-                parent = tk.Tk()
-                parent.withdraw()
-                parent.update_idletasks()
-        except:
-            # If GUI fails, just do silent wait
+        parent = tk._default_root
+        if parent is None:
+            # If no root exists, just do silent wait
             time.sleep(seconds)
             return
     
-    # If parent is withdrawn, we might need to handle it differently
-    parent_withdrawn = False
     try:
-        parent_withdrawn = parent.state() == 'withdrawn'
-    except:
-        pass
-    
-    try:
-        # Create countdown window
         countdownWindow = tk.Toplevel(parent)
-        countdownWindow.overrideredirect(True)
-        countdownWindow.attributes('-topmost', True)
-        # Prevent the countdown window from taking focus
-        countdownWindow.focus_set = lambda: None
-        countdownWindow.take_focus = False
+        countdownWindow.overrideredirect(True)  # Remove window decorations
+        countdownWindow.attributes('-topmost', True)  # Always visible
+        countdownWindow.attributes('-transparentcolor', 'black')  # Make black transparent
         
-        # Transparency
-        try:
-            countdownWindow.attributes('-transparentcolor', 'black')
-            bg_color = 'black'
-        except:
-            bg_color = '#000001'
-            try:
-                countdownWindow.attributes('-alpha', 0.8)
-            except:
-                pass
-        
-        # Window size and position
+        # Window size adapted to font size
         windowWidth = int(size * 3.5)
         windowHeight = int(size * 3)
+        countdownWindow.geometry(f"{windowWidth}x{windowHeight}")
+        
+        # Center window on screen
         screenWidth = countdownWindow.winfo_screenwidth()
         screenHeight = countdownWindow.winfo_screenheight()
         posX = (screenWidth - windowWidth) // 2
         posY = (screenHeight - windowHeight) // 2
         countdownWindow.geometry(f"{windowWidth}x{windowHeight}+{posX}+{posY}")
-        countdownWindow.configure(bg=bg_color)
+        
+        # Black background (will be transparent)
+        countdownWindow.configure(bg='black')
         
         # Description label
         descLabel = tk.Label(countdownWindow,
                             text=description,
                             font=("Arial", max(12, size // 6), "normal"),
                             fg=color,
-                            bg=bg_color)
+                            bg="black")
         descLabel.pack(pady=(20, 5))
         
-        # Countdown number label
+        # Label for the number with transparent background
         numberLabel = tk.Label(countdownWindow, 
                               text="", 
                               font=("Arial", size, "bold"), 
                               fg=color, 
-                              bg=bg_color)
+                              bg="black")  # Black = transparent
         numberLabel.pack(expand=True)
         
-        # Force window to appear
-        countdownWindow.update()
-        
-        # Do the actual countdown with display
+        # Display countdown
         if wholeSeconds > 0:
             for currentNumber in range(wholeSeconds, 0, -1):
                 numberLabel.config(text=str(currentNumber))
                 countdownWindow.update()
                 time.sleep(1)
         
-        # Handle remaining fractional seconds
+        # Handle remaining decimal part
         if isFloat:
             remainingTime = totalSeconds - wholeSeconds
             if remainingTime > 0:
                 time.sleep(remainingTime)
         
-        # Clean up and restore focus if needed
+        # Close automatically
         countdownWindow.destroy()
         
-        # Give a moment for the window system to settle
-        time.sleep(0.1)
-        
     except Exception as e:
-        # If display fails, fall back to silent wait
-        try:
-            countdownWindow.destroy()
-        except:
-            pass
+        # If anything fails, just do silent wait
         time.sleep(seconds)
-
 
 
 matchAction.update({

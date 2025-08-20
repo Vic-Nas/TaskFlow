@@ -28,6 +28,9 @@ import time
 import tkinter as tk
 import time
 
+import tkinter as tk
+import time
+
 def wait(seconds, display=True, description="Waiting", color="red", size=120, parent=None):
     """Visual countdown with big floating numbers"""
     
@@ -54,11 +57,21 @@ def wait(seconds, display=True, description="Waiting", color="red", size=120, pa
             time.sleep(seconds)
             return
     
+    # If parent is withdrawn, we might need to handle it differently
+    parent_withdrawn = False
+    try:
+        parent_withdrawn = parent.state() == 'withdrawn'
+    except:
+        pass
+    
     try:
         # Create countdown window
         countdownWindow = tk.Toplevel(parent)
         countdownWindow.overrideredirect(True)
         countdownWindow.attributes('-topmost', True)
+        # Prevent the countdown window from taking focus
+        countdownWindow.focus_set = lambda: None
+        countdownWindow.take_focus = False
         
         # Transparency
         try:
@@ -113,8 +126,11 @@ def wait(seconds, display=True, description="Waiting", color="red", size=120, pa
             if remainingTime > 0:
                 time.sleep(remainingTime)
         
-        # Clean up
+        # Clean up and restore focus if needed
         countdownWindow.destroy()
+        
+        # Give a moment for the window system to settle
+        time.sleep(0.1)
         
     except Exception as e:
         # If display fails, fall back to silent wait

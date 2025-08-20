@@ -518,9 +518,17 @@ def onClick(buttonText, task=None):
                         if save_response:
                             task["save"].invoke()
                     
-                    root.withdraw()
+                    # Check if window is already withdrawn/iconified
+                    windowWasNormal = root.state() == 'normal'
+                    
+                    if windowWasNormal:
+                        root.iconify()
+                    
                     task.run()
-                    root.deiconify()
+                    
+                    if windowWasNormal:
+                        root.deiconify()
+                        
                 except pyautogui.FailSafeException:
                     print("\nFailsafe activated - TaskFlow will exit")
                     alert("Failsafe triggered! TaskFlow is shutting down.")
@@ -529,7 +537,9 @@ def onClick(buttonText, task=None):
                     traceback.print_exc()
                     alert(f"Can't run that task:\n{e}")
                 finally:
-                    root.deiconify()
+                    # Only deiconify if we were the ones who withdrew it
+                    if windowWasNormal and root.state() != 'normal':
+                        root.deiconify()
 
             case "Save":
                 if not task:

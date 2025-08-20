@@ -283,6 +283,7 @@ selectedGroup = None
 filePaths = {}
 tasksDir = "tasks"
 taskGroups: list[TaskGroup] = []
+lock = singleInstance(port=65432)
 
 if not logged():
     login()
@@ -397,7 +398,7 @@ def onClick(buttonText, task=None):
                     
                 alert("Send mouse to a corner to stop everything.")
                 times_str = runGroupTimesEntry.get()
-                root.withdraw()
+                root.iconify()
                 try:
                     times = int(times_str)
                     if times <= 0:

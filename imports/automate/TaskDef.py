@@ -5,7 +5,7 @@ from collections import defaultdict
 
 matchAction = defaultdict(lambda *args: None)
 
-import os, platform, subprocess
+import os, platform, subprocess, win32gui, win32process
 
 def openFile(path):
     if platform.system() == 'Windows':
@@ -15,27 +15,12 @@ def openFile(path):
     else:
         subprocess.run(['xdg-open', path])
         
-        
 import tkinter as tk
 import time
-
-import tkinter as tk
-import time
-
-import tkinter as tk
-import time
-
-import tkinter as tk
-import time
-
-import tkinter as tk
-import time
-
-import tkinter as tk
-import time
-
-import tkinter as tk
-import time
+try:
+    import win32gui
+except ImportError:
+    win32gui = None
 
 def wait(seconds, display=True, description="Waiting", color="red", size=120, parent=None):
     """Visual countdown with big floating numbers"""
@@ -44,80 +29,86 @@ def wait(seconds, display=True, description="Waiting", color="red", size=120, pa
         time.sleep(seconds)
         return
     
+    # Save current focus before creating countdown window
+    focused_window = None
+    if win32gui:
+        try:
+            focused_window = win32gui.GetForegroundWindow()
+        except:
+            pass
+    
     # Handle float seconds
     isFloat = isinstance(seconds, float)
     totalSeconds = seconds
     wholeSeconds = int(seconds)
     
-    # Use parent or get default root
+    # Use Toplevel instead of creating a new root
     if parent is None:
+        # If no parent provided, get the default root
         parent = tk._default_root
         if parent is None:
-            # If no root exists, just do silent wait
-            time.sleep(seconds)
-            return
+            # If no root exists at all, create one (but this shouldn't happen in your app)
+            parent = tk.Tk()
+            parent.withdraw()
     
-    try:
-        countdownWindow = tk.Toplevel(parent)
-        countdownWindow.overrideredirect(True)  # Remove window decorations
-        countdownWindow.attributes('-topmost', True)  # Always visible
-        
-        # CRITICAL: Prevent focus stealing
-        countdownWindow.wm_attributes('-disabled', True)  # Make it non-interactive
-        
-        countdownWindow.attributes('-transparentcolor', 'black')  # Make black transparent
-        
-        # Window size adapted to font size
-        windowWidth = int(size * 3.5)
-        windowHeight = int(size * 3)
-        countdownWindow.geometry(f"{windowWidth}x{windowHeight}")
-        
-        # Center window on screen
-        screenWidth = countdownWindow.winfo_screenwidth()
-        screenHeight = countdownWindow.winfo_screenheight()
-        posX = (screenWidth - windowWidth) // 2
-        posY = (screenHeight - windowHeight) // 2
-        countdownWindow.geometry(f"{windowWidth}x{windowHeight}+{posX}+{posY}")
-        
-        # Black background (will be transparent)
-        countdownWindow.configure(bg='black')
-        
-        # Description label
-        descLabel = tk.Label(countdownWindow,
-                            text=description,
-                            font=("Arial", max(12, size // 6), "normal"),
-                            fg=color,
-                            bg="black")
-        descLabel.pack(pady=(20, 5))
-        
-        # Label for the number with transparent background
-        numberLabel = tk.Label(countdownWindow, 
-                              text="", 
-                              font=("Arial", size, "bold"), 
-                              fg=color, 
-                              bg="black")  # Black = transparent
-        numberLabel.pack(expand=True)
-        
-        # Display countdown
-        if wholeSeconds > 0:
-            for currentNumber in range(wholeSeconds, 0, -1):
-                numberLabel.config(text=str(currentNumber))
-                countdownWindow.update()
-                time.sleep(1)
-        
-        # Handle remaining decimal part
-        if isFloat:
-            remainingTime = totalSeconds - wholeSeconds
-            if remainingTime > 0:
-                time.sleep(remainingTime)
-        
-        # Close automatically
-        countdownWindow.destroy()
-        
-    except Exception as e:
-        # If anything fails, just do silent wait
-        time.sleep(seconds)
-
+    countdownWindow = tk.Toplevel(parent)
+    countdownWindow.overrideredirect(True)  # Remove window decorations
+    countdownWindow.attributes('-topmost', True)  # Always visible
+    countdownWindow.attributes('-transparentcolor', 'black')  # Make black transparent
+    
+    # Window size adapted to font size
+    windowWidth = int(size * 3.5)
+    windowHeight = int(size * 2.5)
+    countdownWindow.geometry(f"{windowWidth}x{windowHeight}")
+    
+    # Center window on screen
+    screenWidth = countdownWindow.winfo_screenwidth()
+    screenHeight = countdownWindow.winfo_screenheight()
+    posX = (screenWidth - windowWidth) // 2
+    posY = (screenHeight - windowHeight) // 2
+    countdownWindow.geometry(f"{windowWidth}x{windowHeight}+{posX}+{posY}")
+    
+    # Black background (will be transparent)
+    countdownWindow.configure(bg='black')
+    
+    # Description label (this is the only new thing)
+    descLabel = tk.Label(countdownWindow,
+                        text=description,
+                        font=("Arial", max(12, size // 6), "normal"),
+                        fg=color,
+                        bg="black")
+    descLabel.pack(pady=(10, 5))
+    
+    # Label for the number with transparent background
+    numberLabel = tk.Label(countdownWindow, 
+                          text="", 
+                          font=("Arial", size, "bold"), 
+                          fg=color, 
+                          bg="black")  # Black = transparent
+    numberLabel.pack(expand=True)
+    
+    # Display countdown
+    if wholeSeconds > 0:
+        for currentNumber in range(wholeSeconds, 0, -1):
+            numberLabel.config(text=str(currentNumber))
+            countdownWindow.update()
+            time.sleep(1)
+    
+    # Handle remaining decimal part
+    if isFloat:
+        remainingTime = totalSeconds - wholeSeconds
+        if remainingTime > 0:
+            time.sleep(remainingTime)
+    
+    # Close automatically
+    countdownWindow.destroy()
+    
+    # Restore focus to the window that had it before
+    if win32gui and focused_window:
+        try:
+            win32gui.SetForegroundWindow(focused_window)
+        except:
+            pass
 
 matchAction.update({
     "RCLICK": pyautogui.rightClick,
@@ -158,8 +149,17 @@ class Task:
                     self.params[1] = False
                 else:
                     self.params[1] = True
-            # Add description parameter for wait function
-            self.action = lambda *args: wait(*args, description=self.desc)
+            # Create a wrapper function that adds description without modifying params
+            original_wait = matchAction[action]
+            def wait_wrapper(*args):
+                # Insert description as the third parameter
+                if len(args) >= 2:
+                    return original_wait(args[0], args[1], self.desc)
+                elif len(args) == 1:
+                    return original_wait(args[0], True, self.desc)
+                else:
+                    return original_wait(1.0, True, self.desc)
+            self.action = wait_wrapper
             self.log = "Waited"
         elif action == "KEY":
             self.log = "Pressed"
@@ -171,6 +171,7 @@ class Task:
             self.log = "Executed"
         else:
             raise ValueError(f"Unknown action: {action}")
+    
 
     # --- dict-like access for extra data ---
     def __getitem__(self, key):

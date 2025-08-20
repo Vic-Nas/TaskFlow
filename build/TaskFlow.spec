@@ -3,7 +3,7 @@ from PyInstaller.utils.hooks import collect_all
 
 datas = []
 binaries = []
-hiddenimports = ['tkinter', 'tkinter.ttk', 'tkinter.messagebox', 'tkinter.filedialog', 'tkinter.simpledialog', 'json', 'csv', 'sqlite3', 'datetime', 'pathlib', 'threading', 'queue', 'functools', 'itertools', 'collections', 'os', 'sys', 'shutil', 'subprocess', 'importlib', 'importlib.util', 'types']
+hiddenimports = ['tkinter', 'tkinter.ttk', 'tkinter.messagebox', 'tkinter.filedialog', 'tkinter.simpledialog', 'json', 'csv', 'sqlite3', 'datetime', 'pathlib', 'threading', 'queue', 'functools', 'itertools', 'collections', 'os', 'sys', 'shutil', 'subprocess', 'importlib', 'importlib.util', 'types', 'win32gui']
 tmp_ret = collect_all('python3')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 

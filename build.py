@@ -110,6 +110,7 @@ def get_hidden_imports():
         "importlib",
         "importlib.util",
         "types",
+        "win32gui"
     ]
     
     return hidden_imports
